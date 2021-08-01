@@ -16,7 +16,9 @@
 package org.traccar.client
 
 import android.content.Context
-import org.traccar.client.PositionProvider.PositionListener
+import org.traccar.client.services.PositionProvider.PositionListener
+import org.traccar.client.services.AndroidPositionProvider
+import org.traccar.client.services.PositionProvider
 
 object PositionProviderFactory {
 

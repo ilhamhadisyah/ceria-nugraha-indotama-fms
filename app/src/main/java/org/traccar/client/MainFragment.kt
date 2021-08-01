@@ -45,6 +45,12 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import androidx.preference.TwoStatePreference
+import org.traccar.client.services.AutostartReceiver
+import org.traccar.client.services.TrackingService
+import org.traccar.client.ui.activity.MainActivity
+import org.traccar.client.ui.activity.MainApplication
+import org.traccar.client.ui.activity.SettingActivity
+import org.traccar.client.ui.activity.StatusActivity
 import java.util.*
 import kotlin.collections.HashSet
 
@@ -187,6 +193,8 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
         if (item.itemId == R.id.status) {
             startActivity(Intent(activity, StatusActivity::class.java))
             return true
+        } else if(item.itemId == R.id.setting){
+            startActivity(Intent(activity,SettingActivity::class.java))
         }
         return super.onOptionsItemSelected(item)
     }

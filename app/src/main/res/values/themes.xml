@@ -5,6 +5,19 @@
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary_dark</item>
         <item name="colorAccent">@color/accent</item>
+        <item name="actionBarStyle">@style/MyActionBar</item>
+        <item name="actionOverflowButtonStyle">@style/DotsDarkTheme</item>
+    </style>
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorAccent">@color/accent</item>
+    </style>
+    <style name="MyActionBar" parent="Theme.AppCompat.DayNight.DarkActionBar">
+        <item name="android:background">@color/light</item>
+    </style>
+    <style name="DotsDarkTheme" parent="@style/Widget.AppCompat.ActionButton.Overflow" >
+        <item name="android:tint">@color/inactive</item>
     </style>
 
 </resources>
