@@ -202,7 +202,11 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
     private fun initPreferences() {
         PreferenceManager.setDefaultValues(activity, R.xml.preferences, false)
         if (!sharedPreferences.contains(KEY_DEVICE)) {
-            val id = (Random().nextInt(900000) + 100000).toString()
+            //val id = (Random().nextInt(900000) + 100000).toString()
+                val id = android.provider.Settings.Secure.getString(
+                    this.context?.contentResolver,
+                    android.provider.Settings.Secure.ANDROID_ID
+                )
             sharedPreferences.edit().putString(KEY_DEVICE, id).apply()
             findPreference<EditTextPreference>(KEY_DEVICE)?.text = id
         }

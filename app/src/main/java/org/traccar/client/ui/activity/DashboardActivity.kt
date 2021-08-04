@@ -45,7 +45,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
 
         sharedPreferences.edit().putBoolean(KEY_STATUS,true).apply()
-        if (sharedPreferences.getBoolean(MainFragment.KEY_STATUS, false)) {
+        if (sharedPreferences.getBoolean(KEY_STATUS, false)) {
             startTrackingService(checkPermission = true, initialPermission = false)
         }
     }
@@ -75,14 +75,13 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
 
     companion object {
-        private val TAG = MainFragment::class.java.simpleName
         private const val ALARM_MANAGER_INTERVAL = 15000
         private const val PERMISSIONS_REQUEST_LOCATION = 2
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        if (key == MainFragment.KEY_STATUS) {
-            if (sharedPreferences!!.getBoolean(MainFragment.KEY_STATUS, false)) {
+        if (key == KEY_STATUS) {
+            if (sharedPreferences!!.getBoolean(KEY_STATUS, false)) {
                 startTrackingService(checkPermission = true, initialPermission = false)
             } else {
                 stopTrackingService()
@@ -116,7 +115,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                 ALARM_MANAGER_INTERVAL.toLong(), ALARM_MANAGER_INTERVAL.toLong(), alarmIntent
             )
         } else {
-            sharedPreferences.edit().putBoolean(MainFragment.KEY_STATUS, false).apply()
+            sharedPreferences.edit().putBoolean(KEY_STATUS, false).apply()
 //            val preference = findPreference<TwoStatePreference>(MainFragment.KEY_STATUS)
 //            preference?.isChecked = false
         }

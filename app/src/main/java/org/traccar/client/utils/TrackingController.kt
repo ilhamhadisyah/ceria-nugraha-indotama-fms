@@ -186,7 +186,7 @@ class TrackingController(private val context: Context) : PositionListener, Netwo
 
     companion object {
         private val TAG = TrackingController::class.java.simpleName
-        private const val RETRY_DELAY = 30 * 1000
+        private const val RETRY_DELAY = 1 * 1000
     }
 
 }

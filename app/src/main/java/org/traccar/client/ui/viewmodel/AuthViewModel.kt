@@ -10,7 +10,7 @@ import java.lang.Exception
 
 class AuthViewModel(private val networkRepository: NetworkRepository) : ViewModel() {
 
-    fun getAuthToken(email: String, password: String) = liveData(Dispatchers.IO) {
+    fun getAuthToken(email: String, password: String,imei : String) = liveData(Dispatchers.IO) {
         emit(Resources.loading(data = null))
         try {
             emit(
@@ -18,7 +18,7 @@ class AuthViewModel(private val networkRepository: NetworkRepository) : ViewMode
                     data = networkRepository.getUserAuth(
                         email,
                         password,
-                        Build.MODEL
+                        imei
                     )
                 )
             )
