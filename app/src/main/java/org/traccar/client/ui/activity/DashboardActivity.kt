@@ -15,8 +15,10 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
-import androidx.preference.TwoStatePreference
-import org.traccar.client.MainFragment
+import org.threeten.bp.LocalDate
+import org.threeten.bp.ZoneId
+import org.threeten.bp.ZonedDateTime
+import org.threeten.bp.format.DateTimeFormatter
 import org.traccar.client.MainFragment.Companion.KEY_STATUS
 import org.traccar.client.R
 import org.traccar.client.databinding.ActivityDashboardBinding
@@ -29,16 +31,26 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var alarmManager: AlarmManager
     private lateinit var alarmIntent: PendingIntent
+    private lateinit var currentDateTime : ZonedDateTime
+    private lateinit var idZone: ZoneId
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardBinding.inflate(layoutInflater)
-        setContentView(R.layout.activity_dashboard)
+        setContentView(binding.root)
 
         supportActionBar?.apply {
             setDisplayShowCustomEnabled(true)
             setCustomView(R.layout.custom_toolbar)
         }
+
+        idZone = ZoneId.systemDefault()
+        currentDateTime = ZonedDateTime.now(idZone)
+        val date = currentDateTime.toLocalDateTime()
+        val formatter = DateTimeFormatter.ofPattern("d M Y H:i:s \\G\\M\\T")
+        val formattedDate = LocalDate.parse(date.toString(),formatter)
+        binding.dateTv.text = formattedDate.toString()
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmIntent = PendingIntent.getBroadcast(this, 0, Intent(this, AutostartReceiver::class.java), 0)
@@ -108,7 +120,6 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             }
         }
         if (permission) {
-            //setPreferencesEnabled(false)
             ContextCompat.startForegroundService(this, Intent(this, TrackingService::class.java))
             alarmManager.setInexactRepeating(
                 AlarmManager.ELAPSED_REALTIME_WAKEUP,
@@ -116,13 +127,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             )
         } else {
             sharedPreferences.edit().putBoolean(KEY_STATUS, false).apply()
-//            val preference = findPreference<TwoStatePreference>(MainFragment.KEY_STATUS)
-//            preference?.isChecked = false
         }
     }
     private fun stopTrackingService() {
         alarmManager.cancel(alarmIntent)
         this.stopService(Intent(this, TrackingService::class.java))
-        //setPreferencesEnabled(true)
     }
 }

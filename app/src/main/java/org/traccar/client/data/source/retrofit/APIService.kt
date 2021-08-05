@@ -1,6 +1,7 @@
 package org.traccar.client.data.source.retrofit
 
 import org.traccar.client.data.model.Token
+import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
@@ -14,4 +15,7 @@ interface APIService {
         @Field("password") password: String?,
         @Field("device") device: String?
     ): Token
+
+    @POST("activities")
+    suspend fun sendActivities(@Body body: String)
 }
