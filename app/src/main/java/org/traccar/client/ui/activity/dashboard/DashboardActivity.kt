@@ -120,7 +120,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             deviceId,
                             "stop",
                             date,
-                            4,
+                            viewModel.parentSessionNumber,
                             1,
                             location.latitude,
                             location.longitude,
@@ -135,7 +135,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 //                            deviceId,
 //                            "start",
 //                            date,
-//                            4,
+//                            viewModel.parentSessionNumber,
 //                            1,
 //                            location.latitude,
 //                            location.longitude,
@@ -179,7 +179,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             deviceId,
                             "stop",
                             date,
-                            4,
+                            viewModel.parentSessionNumber,
                             1,
                             location.latitude,
                             location.longitude,
@@ -194,7 +194,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             deviceId,
                             "start",
                             date,
-                            4,
+                            viewModel.parentSessionNumber,
                             1,
                             location.latitude,
                             location.longitude,
@@ -234,7 +234,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             deviceId,
                             "stop",
                             date,
-                            4,
+                            viewModel.parentSessionNumber,
                             1,
                             location.latitude,
                             location.longitude,
@@ -249,7 +249,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             deviceId,
                             "start",
                             date,
-                            4,
+                            viewModel.parentSessionNumber,
                             1,
                             location.latitude,
                             location.longitude,
@@ -275,6 +275,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
     @SuppressLint("MissingPermission")
     private fun startToDumping() {
+        viewModel.parentSessionNumber = getParentSessionNumber()
         setDateTime(FULL_DATE_FORMAT)
         alertDialog = AlertDialog.Builder(this)
         alertDialog
@@ -291,7 +292,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             deviceId,
                             "start",
                             date,
-                            4,
+                            viewModel.parentSessionNumber,
                             1,
                             location.latitude,
                             location.longitude,
@@ -315,8 +316,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
     }
 
     fun getParentSessionNumber(): Int {
-        var recent = 0
-        recent = sharedPreferences.getInt(PARENT_SESSION, 0)
+        val recent: Int = sharedPreferences.getInt(PARENT_SESSION, 0)
         sharedPreferences.edit().putInt(PARENT_SESSION, recent + 1).apply()
         return recent
     }
