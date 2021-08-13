@@ -12,6 +12,8 @@ class ViewModelFactory(private val apiHelper: APIHelper) : ViewModelProvider.Fac
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AuthViewModel::class.java)){
             return AuthViewModel(NetworkRepository(apiHelper)) as T
+        }else if(modelClass.isAssignableFrom(DashboardViewModel::class.java)){
+            return DashboardViewModel(NetworkRepository(apiHelper)) as T
         }
         throw IllegalArgumentException("Unkown Class")
     }

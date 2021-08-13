@@ -23,12 +23,14 @@ import android.app.Notification
 import android.graphics.Color
 import android.os.Build
 import android.app.Activity
+import com.jakewharton.threetenabp.AndroidThreeTen
 import org.traccar.client.R
 
 open class MainApplication : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()
+        //AndroidThreeTen.init(this)
         System.setProperty("http.keepAliveDuration", (30 * 60 * 1000).toString())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerChannel()

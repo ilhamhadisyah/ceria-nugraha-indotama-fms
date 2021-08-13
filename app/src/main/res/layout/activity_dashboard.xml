@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.activity.DashboardActivity">
+    tools:context=".ui.activity.dashboard.DashboardActivity">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
@@ -17,14 +17,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
+        <Chronometer
             android:id="@+id/timer_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:drawableStart="@drawable/ic_baseline_timer_24"
             android:drawableLeft="@drawable/ic_baseline_timer_24"
-            android:text="00:00:00"
             android:textSize="30sp"
             app:drawableStartCompat="@drawable/ic_baseline_timer_24"
             tools:ignore="UseCompatTextViewDrawableXml" />
@@ -42,6 +41,7 @@
             android:orientation="horizontal">
 
             <Button
+                android:id="@+id/start_to_dumping_point"
                 android:layout_width="0dp"
                 android:layout_height="150dp"
                 android:layout_margin="5dp"
@@ -54,6 +54,7 @@
                 android:textSize="14sp" />
 
             <Button
+                android:id="@+id/arrive_to_dumping_point"
                 android:layout_width="0dp"
                 android:layout_height="150dp"
                 android:layout_margin="5dp"
@@ -72,6 +73,7 @@
             android:orientation="horizontal">
 
             <Button
+                android:id="@+id/start_to_loading_point"
                 android:layout_width="0dp"
                 android:layout_height="150dp"
                 android:layout_margin="5dp"
@@ -84,6 +86,7 @@
                 android:textSize="14sp" />
 
             <Button
+                android:id="@+id/arrive_to_loading_point"
                 android:layout_width="0dp"
                 android:layout_height="150dp"
                 android:layout_margin="5dp"
@@ -91,7 +94,6 @@
                 android:background="@drawable/btn_background"
                 android:padding="20dp"
                 android:text="@string/arrive_to_loanding_point"
-
                 android:textAllCaps="false"
                 android:textColor="@color/light"
                 android:textSize="14sp" />

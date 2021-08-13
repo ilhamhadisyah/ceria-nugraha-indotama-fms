@@ -21,20 +21,35 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.CancellationSignal
 import android.os.Looper
 import org.traccar.client.MainFragment
 import org.traccar.client.data.model.Position
 
-class AndroidPositionProvider(context: Context, listener: PositionListener) : PositionProvider(context, listener), LocationListener {
+class AndroidPositionProvider(context: Context, listener: PositionListener) :
+    PositionProvider(context, listener), LocationListener {
 
-    private val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    private val locationManager =
+        context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
     private val provider = getProvider(preferences.getString(MainFragment.KEY_ACCURACY, "medium"))
+
+//    @SuppressLint("MissingPermission")
+//    fun getRecentPosition() {
+//        try {
+//            locationManager.getCurrentLocation(provider, CancellationSignal())
+//
+//        } catch (e: RuntimeException) {
+//            listener.onPositionError(e)
+//
+//        }
+//    }
 
     @SuppressLint("MissingPermission")
     override fun startUpdates() {
         try {
             locationManager.requestLocationUpdates(
-                    provider, if (distance > 0 || angle > 0) MINIMUM_INTERVAL else interval, 0f, this)
+                provider, if (distance > 0 || angle > 0) MINIMUM_INTERVAL else interval, 0f, this
+            )
         } catch (e: RuntimeException) {
             listener.onPositionError(e)
         }
@@ -53,7 +68,13 @@ class AndroidPositionProvider(context: Context, listener: PositionListener) : Po
             } else {
                 locationManager.requestSingleUpdate(provider, object : LocationListener {
                     override fun onLocationChanged(location: Location) {
-                        listener.onPositionUpdate(Position(deviceId, location, getBatteryLevel(context)))
+                        listener.onPositionUpdate(
+                            Position(
+                                deviceId,
+                                location,
+                                getBatteryLevel(context)
+                            )
+                        )
                     }
 
                     override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
@@ -77,8 +98,8 @@ class AndroidPositionProvider(context: Context, listener: PositionListener) : Po
     private fun getProvider(accuracy: String?): String {
         return when (accuracy) {
             "high" -> LocationManager.GPS_PROVIDER
-            "low"  -> LocationManager.PASSIVE_PROVIDER
-            else   -> LocationManager.NETWORK_PROVIDER
+            "low" -> LocationManager.PASSIVE_PROVIDER
+            else -> LocationManager.NETWORK_PROVIDER
         }
     }
 

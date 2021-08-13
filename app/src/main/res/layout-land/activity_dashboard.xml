@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.activity.DashboardActivity">
+    tools:context=".ui.activity.dashboard.DashboardActivity">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:id="@+id/linearLayoutCompat"
@@ -18,14 +18,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
+        <Chronometer
             android:id="@+id/timer_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:drawableStart="@drawable/ic_baseline_timer_24"
             android:drawableLeft="@drawable/ic_baseline_timer_24"
-            android:text="00:00:00"
             android:textSize="30sp"
             app:drawableStartCompat="@drawable/ic_baseline_timer_24"
             tools:ignore="UseCompatTextViewDrawableXml" />
@@ -44,76 +43,66 @@
             android:orientation="horizontal">
 
             <androidx.appcompat.widget.LinearLayoutCompat
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <androidx.appcompat.widget.LinearLayoutCompat
+                <Button
+                    android:id="@+id/start_to_dumping_point"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/btn_background"
+                    android:padding="30dp"
+                    android:text="@string/start_to_dumping_point"
+                    android:textAllCaps="false"
+                    android:textColor="@color/light"
+                    android:textSize="20sp" />
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_height="120dp"
-                        android:layout_margin="5dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/btn_background"
-                        android:padding="30dp"
-                        android:text="@string/start_to_dumping_point"
-                        android:textAllCaps="false"
-                        android:textColor="@color/light"
-                        android:textSize="14sp" />
-
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_height="120dp"
-                        android:layout_margin="5dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/btn_background"
-                        android:padding="30dp"
-                        android:text="@string/arrive_to_dumping_point"
-                        android:textAllCaps="false"
-                        android:textColor="@color/light"
-                        android:textSize="14sp" />
-                </androidx.appcompat.widget.LinearLayoutCompat>
-
-                <androidx.appcompat.widget.LinearLayoutCompat
+                <Button
+                    android:id="@+id/arrive_to_dumping_point"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
+                    android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/btn_background"
+                    android:padding="30dp"
+                    android:text="@string/arrive_to_dumping_point"
+                    android:textAllCaps="false"
+                    android:textColor="@color/light"
+                    android:textSize="20sp" />
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_height="120dp"
-                        android:layout_margin="5dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/btn_background"
-                        android:padding="20dp"
-                        android:text="@string/start_to_loading_point"
-                        android:textAllCaps="false"
-                        android:textColor="@color/light"
-                        android:textSize="14sp" />
+                <Button
+                    android:id="@+id/start_to_loading_point"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/btn_background"
+                    android:padding="20dp"
+                    android:text="@string/start_to_loading_point"
+                    android:textAllCaps="false"
+                    android:textColor="@color/light"
+                    android:textSize="20sp" />
 
-                    <Button
-                        android:layout_width="0dp"
-                        android:layout_height="120dp"
-                        android:layout_margin="5dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/btn_background"
-                        android:padding="20dp"
-                        android:text="@string/arrive_to_loanding_point"
-                        android:textAllCaps="false"
-                        android:textColor="@color/light"
-                        android:textSize="14sp" />
-                </androidx.appcompat.widget.LinearLayoutCompat>
+                <Button
+                    android:id="@+id/arrive_to_loading_point"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_margin="5dp"
+                    android:background="@drawable/btn_background"
+                    android:padding="20dp"
+                    android:text="@string/arrive_to_loanding_point"
+                    android:textAllCaps="false"
+                    android:textColor="@color/light"
+                    android:textSize="20sp" />
+
+
             </androidx.appcompat.widget.LinearLayoutCompat>
 
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="2"
+                android:layout_weight="1.5"
                 android:orientation="vertical">
 
                 <androidx.appcompat.widget.LinearLayoutCompat
@@ -210,7 +199,7 @@
 
                     <Button
                         android:layout_width="0dp"
-                        android:layout_height="50dp"
+                        android:layout_height="match_parent"
                         android:layout_margin="5dp"
                         android:layout_weight="1"
                         android:background="@drawable/btn_background_warning"
@@ -220,28 +209,31 @@
                         android:textColor="@color/light"
                         android:textSize="14sp" />
 
+                    <androidx.appcompat.widget.LinearLayoutCompat
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Jumlah Load OB :" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Jumlah Load Limonit :" />
+
+                        <TextView
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Jumlah Load Saprolid :" />
+                    </androidx.appcompat.widget.LinearLayoutCompat>
+
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
-                <androidx.appcompat.widget.LinearLayoutCompat
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Jumlah Load OB :" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Jumlah Load Limonit :" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Jumlah Load Saprolid :" />
-                </androidx.appcompat.widget.LinearLayoutCompat>
             </androidx.appcompat.widget.LinearLayoutCompat>
 
 

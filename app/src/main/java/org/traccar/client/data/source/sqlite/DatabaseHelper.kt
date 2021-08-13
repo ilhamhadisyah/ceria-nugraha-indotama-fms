@@ -23,6 +23,7 @@ import android.database.SQLException
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.os.AsyncTask
+import org.traccar.client.data.model.ActivityModel
 import org.traccar.client.data.model.Position
 import java.sql.Date
 
@@ -71,19 +72,36 @@ class DatabaseHelper(context: Context?) :
                     "battery REAL," +
                     "mock INTEGER)"
         )
+
+        db.execSQL(
+            "CREATE TABLE activities (" +
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "loading_material TEXT," +
+                    "activity_type TEXT," +
+                    "imei TEXT," +
+                    "action TEXT," +
+                    "created_at TEXT," +
+                    "session_parent_number INTEGER," +
+                    "session_child_number INTEGER," +
+                    "lat REAL," +
+                    "long REAL," +
+                    "status INTEGER)"
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS position;")
+        db.execSQL("DROP TABLE IF EXISTS activities;")
         onCreate(db)
     }
 
     override fun onDowngrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS position;")
+        db.execSQL("DROP TABLE IF EXISTS activities;")
         onCreate(db)
     }
 
-    fun insertPosition(position: Position) {
+    private fun insertPosition(position: Position) {
         val values = ContentValues()
         values.put("deviceId", position.deviceId)
         values.put("time", position.time.time)
@@ -97,7 +115,6 @@ class DatabaseHelper(context: Context?) :
         values.put("mock", if (position.mock) 1 else 0)
         db.insertOrThrow("position", null, values)
     }
-
     fun insertPositionAsync(position: Position, handler: DatabaseHandler<Unit?>) {
         object : DatabaseAsyncTask<Unit>(handler) {
             override fun executeMethod() {
@@ -105,8 +122,30 @@ class DatabaseHelper(context: Context?) :
             }
         }.execute()
     }
+    private fun insertActivity(model: ActivityModel) {
+        val values = ContentValues()
+        values.put("loading_material", model.loadingMaterial)
+        values.put("activity_type", model.activityType)
+        values.put("imei", model.imei)
+        values.put("action", model.action)
+        values.put("created_at", model.createdAt)
+        values.put("session_parent_number", model.sessionParentNumber)
+        values.put("session_child_number", model.sessionChildNumber)
+        values.put("lat", model.lat)
+        values.put("long", model.long)
+        values.put("status", model.status)
+        db.insertOrThrow("activities", null, values)
+    }
 
-    fun selectPosition(): Position? {
+    fun insertActivityAsync(activity: ActivityModel, handler: DatabaseHandler<Unit?>) {
+        object : DatabaseAsyncTask<Unit>(handler) {
+            override fun executeMethod() {
+                insertActivity(activity)
+            }
+        }.execute()
+    }
+
+    private fun selectPosition(): Position? {
         db.rawQuery("SELECT * FROM position ORDER BY id LIMIT 1", null).use { cursor ->
             if (cursor.count > 0) {
                 cursor.moveToFirst()
@@ -121,13 +160,12 @@ class DatabaseHelper(context: Context?) :
                     course = cursor.getDouble(cursor.getColumnIndex("course")),
                     accuracy = cursor.getDouble(cursor.getColumnIndex("accuracy")),
                     battery = cursor.getDouble(cursor.getColumnIndex("battery")),
-                    mock = cursor.getInt(cursor.getColumnIndex("mock")) > 0,
+                    mock = cursor.getInt(cursor.getColumnIndex("mock")) > 0
                 )
             }
         }
         return null
     }
-
     fun selectPositionAsync(handler: DatabaseHandler<Position?>) {
         object : DatabaseAsyncTask<Position?>(handler) {
             override fun executeMethod(): Position? {
@@ -135,6 +173,64 @@ class DatabaseHelper(context: Context?) :
             }
         }.execute()
     }
+
+    private fun getActivities(): ArrayList<ActivityModel>? {
+        val listData: ArrayList<ActivityModel> = arrayListOf()
+        db.rawQuery("SELECT * FROM activities WHERE status = 0 ORDER BY id ASC", null)
+            .use { cursor ->
+                while (cursor.moveToNext()) {
+                    listData.add(
+                        ActivityModel(
+                            loadingMaterial = cursor.getString(cursor.getColumnIndex("loading_material")),
+                            activityType = cursor.getString(cursor.getColumnIndex("activity_type")),
+                            imei = cursor.getString(cursor.getColumnIndex("imei")),
+                            action = cursor.getString(cursor.getColumnIndex("action")),
+                            createdAt = cursor.getString(cursor.getColumnIndex("created_at")),
+                            sessionParentNumber = cursor.getInt(cursor.getColumnIndex("session_parent_number")),
+                            sessionChildNumber = cursor.getInt(cursor.getColumnIndex("session_child_number")),
+                            lat = cursor.getDouble(cursor.getColumnIndex("lat")),
+                            long = cursor.getDouble(cursor.getColumnIndex("long")),
+                            status = cursor.getInt(cursor.getColumnIndex("status")),
+                            activityId = cursor.getInt(cursor.getColumnIndex("id"))
+                        )
+                    )
+                }
+            }
+        return listData
+    }
+    fun getActivitiesQueueAsync(handler: DatabaseHandler<ArrayList<ActivityModel>?>) {
+        object : DatabaseAsyncTask<ArrayList<ActivityModel>?>(handler) {
+            override fun executeMethod(): ArrayList<ActivityModel>? {
+                return getActivities()
+            }
+        }.execute()
+    }
+
+
+    private fun updateActivity(activity: ActivityModel) {
+        val values = ContentValues()
+        values.put("loading_material", activity.loadingMaterial)
+        values.put("activity_type", activity.activityType)
+        values.put("imei", activity.imei)
+        values.put("action", activity.action)
+        values.put("created_at", activity.createdAt)
+        values.put("session_parent_number", activity.sessionParentNumber)
+        values.put("session_child_number", activity.sessionChildNumber)
+        values.put("lat", activity.lat)
+        values.put("long", activity.long)
+        values.put("status", 1)
+        db.update("activities",values,"id = ?", arrayOf("${activity.activityId}"))
+    }
+    fun updateActivityAsync(activity: ActivityModel, handler: DatabaseHandler<Unit?>) {
+        object : DatabaseAsyncTask<Unit>(handler) {
+            override fun executeMethod() {
+                updateActivity(activity)
+            }
+        }.execute()
+    }
+
+
+
 
     fun deletePosition(id: Long) {
         if (db.delete("position", "id = ?", arrayOf(id.toString())) != 1) {

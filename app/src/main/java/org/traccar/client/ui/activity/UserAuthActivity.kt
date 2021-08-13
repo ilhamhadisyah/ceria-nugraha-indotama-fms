@@ -9,7 +9,6 @@ import android.net.NetworkInfo
 import android.os.Bundle
 import android.telephony.TelephonyManager
 import android.view.View
-import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProviders
@@ -18,9 +17,9 @@ import org.traccar.client.R
 import org.traccar.client.data.source.retrofit.APIClient
 import org.traccar.client.data.source.retrofit.APIHelper
 import org.traccar.client.databinding.ActivityUserAuthBinding
+import org.traccar.client.ui.activity.dashboard.DashboardActivity
 import org.traccar.client.ui.viewmodel.AuthViewModel
 import org.traccar.client.ui.viewmodel.ViewModelFactory
-import org.traccar.client.utils.AppPreferenceManager
 import org.traccar.client.utils.PreferenceKey
 import org.traccar.client.utils.networkutils.Status
 
@@ -29,7 +28,6 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
 
     private lateinit var viewModel: AuthViewModel
     private lateinit var binding: ActivityUserAuthBinding
-    private lateinit var tm: TelephonyManager
     private var deviceId: String = ""
 
     private lateinit var preferences: SharedPreferences
@@ -48,7 +46,7 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
                 ViewModelProviders.of(this,
                     ViewModelFactory(
                         APIHelper(
-                            APIClient.apiService
+                            APIClient.apiService()
                         )
                     )
                 ).get(AuthViewModel::class.java)
@@ -66,7 +64,7 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
 
             }
             binding.loginBtn.setOnClickListener(this)
-            tm = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
+            //tm = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
 
             Toast.makeText(this, deviceId, Toast.LENGTH_SHORT).show()
         }
@@ -84,9 +82,6 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.login_btn -> {
-//                val imm: InputMethodManager =
-//                    getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-//                imm.hideSoftInputFromWindow(v.windowToken, 0)
 
                 val cm = this.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                 val activeNetwork: NetworkInfo? = cm.activeNetworkInfo

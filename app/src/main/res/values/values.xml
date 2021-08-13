@@ -8,6 +8,11 @@
         <item>medium</item>
         <item>low</item>
     </string-array>
+    <string-array name="material_items" translatable="false">
+        <item>ob</item>
+        <item>limonit</item>
+        <item>saprolit</item>
+    </string-array>
 
     <string-array name="settings_accuracy_names">
         <item>@string/settings_accuracy_high</item>
