@@ -12,6 +12,7 @@ class DashboardViewModel(private val networkRepository: NetworkRepository) : Vie
     var recentTime: Long = 0L
 
     var parentSessionNumber: Int = 0
+
     var rain: Int = 0
     var rest: Int = 0
     var slippery: Int = 0

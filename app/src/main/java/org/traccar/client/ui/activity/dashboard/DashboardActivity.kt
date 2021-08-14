@@ -22,8 +22,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
+import androidx.preference.Preference
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import org.traccar.client.MainFragment
 import org.traccar.client.MainFragment.Companion.KEY_STATUS
 import org.traccar.client.R
 import org.traccar.client.data.model.ActivityModel
@@ -39,7 +41,9 @@ import org.traccar.client.ui.activity.StatusActivity
 import org.traccar.client.ui.viewmodel.DashboardViewModel
 import org.traccar.client.ui.viewmodel.ViewModelFactory
 import org.traccar.client.utils.ActivityValues
+import org.traccar.client.utils.AppPreferencesManager
 import org.traccar.client.utils.PreferenceKey
+import org.traccar.client.utils.PreferenceKey.CHILD_SESSION
 import org.traccar.client.utils.PreferenceKey.PARENT_SESSION
 import org.traccar.client.utils.networkutils.Status
 import java.text.DateFormat
@@ -52,6 +56,8 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
     View.OnClickListener {
 
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var preferences: AppPreferencesManager
+
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var alarmManager: AlarmManager
     private lateinit var alarmIntent: PendingIntent
@@ -73,38 +79,143 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        preferences = AppPreferencesManager(this)
         sharedPreferences =
             this.getSharedPreferences(PreferenceKey.MAIN_PREFERENCE, Context.MODE_PRIVATE)
         initView()
         alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmIntent =
             PendingIntent.getBroadcast(this, 0, Intent(this, AutostartReceiver::class.java), 0)
-        sharedPreferences.edit().putBoolean(KEY_STATUS, true).apply()
-        if (sharedPreferences.getBoolean(KEY_STATUS, false)) {
-            startTrackingService(checkPermission = true, initialPermission = false)
-        }
+        preferences.keyStatus = true
+        startTrackingService(checkPermission = true, initialPermission = false)
     }
 
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.start_to_dumping_point -> {
-                startToDumping()
+            R.id.start_to_dumping_point -> startToDumping()
+            R.id.arrive_to_dumping_point -> arriveToDumping()
+            R.id.start_to_loading_point -> startToLoading()
+            R.id.arrive_to_loading_point -> arriveToLoading()
+            R.id.rain_btn -> {
+                if (!binding.rainBtn.isSelected) {
+                    viewModel.rain = preferences.getChildSession()
+                    binding.rainBtn.isSelected = true
+                    activityMenu(activityValues.RAIN,activityValues.START,viewModel.rain)
+                } else {
+                    binding.rainBtn.isSelected = false
+                    activityMenu(activityValues.RAIN,activityValues.STOP,viewModel.rain)
+                }
             }
-            R.id.arrive_to_dumping_point -> {
-                arriveToDumping()
-            }
-            R.id.start_to_loading_point -> {
-                startToLoading()
-            }
-            R.id.arrive_to_loading_point -> {
-                arriveToLoading()
+            R.id.slippery_btn -> {
+                if (!binding.slipperyBtn.isSelected) {
+                    viewModel.slippery = preferences.getChildSession()
+                    binding.slipperyBtn.isSelected = true
+                    activityMenu(activityValues.SLIPPERY,activityValues.START,viewModel.slippery)
 
+                } else {
+                    binding.slipperyBtn.isSelected = false
+                    activityMenu(activityValues.SLIPPERY,activityValues.STOP,viewModel.slippery)
+                }
+            }
+            R.id.rest_btn -> {
+                if (!binding.restBtn.isSelected) {
+                    viewModel.rest = preferences.getChildSession()
+                    binding.restBtn.isSelected = true
+                    activityMenu(activityValues.REST,activityValues.START,viewModel.rest)
+
+                } else {
+                    binding.restBtn.isSelected = false
+                    activityMenu(activityValues.REST,activityValues.STOP,viewModel.rest)
+                }
+            }
+            R.id.eat_btn -> {
+                if (!binding.eatBtn.isSelected) {
+                    viewModel.eat = preferences.getChildSession()
+                    binding.eatBtn.isSelected = true
+                    activityMenu(activityValues.EAT,activityValues.START,viewModel.eat)
+
+                } else {
+                    binding.eatBtn.isSelected = false
+                    activityMenu(activityValues.EAT,activityValues.STOP,viewModel.eat)
+                }
+            }
+            R.id.pray_btn -> {
+                if (!binding.prayBtn.isSelected) {
+                    viewModel.pray = preferences.getChildSession()
+                    binding.prayBtn.isSelected = true
+                    activityMenu(activityValues.PRAY,activityValues.START,viewModel.pray)
+
+                } else {
+                    binding.prayBtn.isSelected = false
+                    activityMenu(activityValues.PRAY,activityValues.STOP,viewModel.pray)
+                }
+            }
+            R.id.no_operator_btn -> {
+                if (!binding.noOperatorBtn.isSelected) {
+                    viewModel.noOperator = preferences.getChildSession()
+                    binding.noOperatorBtn.isSelected = true
+                    activityMenu(activityValues.NO_OPERATOR,activityValues.START,viewModel.noOperator)
+
+                } else {
+                    binding.noOperatorBtn.isSelected = false
+                    activityMenu(activityValues.NO_OPERATOR,activityValues.STOP,viewModel.noOperator)
+                }
+            }
+            R.id.breakdown_btn -> {
+                if (!binding.breakdownBtn.isSelected) {
+                    viewModel.breakDown = preferences.getChildSession()
+                    binding.breakdownBtn.isSelected = true
+                    activityMenu(activityValues.BREAK_DOWN,activityValues.START,viewModel.breakDown)
+
+                } else {
+                    binding.breakdownBtn.isSelected = false
+                    activityMenu(activityValues.BREAK_DOWN,activityValues.STOP,viewModel.breakDown)
+                }
             }
         }
     }
 
     @SuppressLint("MissingPermission")
+    private fun activityMenu(
+        activity: String,
+        action: String,
+        childSession: Int
+    ) {
+        alertDialog = AlertDialog.Builder(this)
+        alertDialog
+            .setTitle("Konfirmasi aktivitas?")
+            .setMessage("Tidak dapat kembali setelah service berjalan")
+            .setPositiveButton("Konfirmasi") { _, _ ->
+                val date = dateFormatter.format(Date())
+                location.lastLocation.addOnSuccessListener(this) { location ->
+
+                    writeActivity(
+                        ActivityModel(
+                            0,
+                            null,
+                            activity,
+                            deviceId,
+                            action,
+                            date,
+                            viewModel.parentSessionNumber,
+                            childSession,
+                            location.latitude,
+                            location.longitude,
+                            0
+                        )
+                    )
+
+                    getUnPostedActivity()
+                }
+            }
+            .setNegativeButton("batal") { dialog, _ ->
+                dialog.cancel()
+            }.show()
+    }
+
+    @SuppressLint("MissingPermission")
     private fun arriveToLoading() {
+        preferences.resetChildSession()
         alertDialog = AlertDialog.Builder(this)
         alertDialog
             .setTitle("Konfirmasi aktivitas?")
@@ -118,10 +229,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             loadingMaterial,
                             activityValues.LOADING_POINT,
                             deviceId,
-                            "stop",
+                            activityValues.STOP,
                             date,
                             viewModel.parentSessionNumber,
-                            1,
+                            preferences.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -177,10 +288,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             null,
                             activityValues.DUMPING,
                             deviceId,
-                            "stop",
+                            activityValues.STOP,
                             date,
                             viewModel.parentSessionNumber,
-                            1,
+                            preferences.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -192,10 +303,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             loadingMaterial,
                             activityValues.LOADING_POINT,
                             deviceId,
-                            "start",
+                            activityValues.START,
                             date,
                             viewModel.parentSessionNumber,
-                            1,
+                            preferences.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -232,10 +343,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             null,
                             activityValues.DUMPING_POINT,
                             deviceId,
-                            "stop",
+                            activityValues.STOP,
                             date,
                             viewModel.parentSessionNumber,
-                            1,
+                            preferences.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -247,10 +358,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             null,
                             activityValues.DUMPING,
                             deviceId,
-                            "start",
+                            activityValues.START,
                             date,
                             viewModel.parentSessionNumber,
-                            1,
+                            preferences.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -275,7 +386,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
     @SuppressLint("MissingPermission")
     private fun startToDumping() {
-        viewModel.parentSessionNumber = getParentSessionNumber()
+        viewModel.parentSessionNumber = preferences.getParentSession()
         setDateTime(FULL_DATE_FORMAT)
         alertDialog = AlertDialog.Builder(this)
         alertDialog
@@ -290,10 +401,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             null,
                             activityValues.DUMPING_POINT,
                             deviceId,
-                            "start",
+                            activityValues.START,
                             date,
                             viewModel.parentSessionNumber,
-                            1,
+                            preferences.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -313,12 +424,6 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             .setNegativeButton("batal") { dialog, _ ->
                 dialog.cancel()
             }.show()
-    }
-
-    fun getParentSessionNumber(): Int {
-        val recent: Int = sharedPreferences.getInt(PARENT_SESSION, 0)
-        sharedPreferences.edit().putInt(PARENT_SESSION, recent + 1).apply()
-        return recent
     }
 
     private fun mainBtnActivityVisibility(
@@ -350,7 +455,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         }
         location = LocationServices.getFusedLocationProviderClient(this)
 
-        val rawToken = sharedPreferences.getString(PreferenceKey.TOKEN, "")
+        val rawToken = preferences.token
         val token = rawToken?.substringAfter('|')
 
         viewModel =
@@ -383,6 +488,13 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             arriveToDumpingPoint.setOnClickListener(this@DashboardActivity)
             startToLoadingPoint.setOnClickListener(this@DashboardActivity)
             arriveToLoadingPoint.setOnClickListener(this@DashboardActivity)
+            rainBtn.setOnClickListener(this@DashboardActivity)
+            slipperyBtn.setOnClickListener(this@DashboardActivity)
+            restBtn.setOnClickListener(this@DashboardActivity)
+            eatBtn.setOnClickListener(this@DashboardActivity)
+            prayBtn.setOnClickListener(this@DashboardActivity)
+            noOperatorBtn.setOnClickListener(this@DashboardActivity)
+            breakdownBtn.setOnClickListener(this@DashboardActivity)
         }
         timer = findViewById(R.id.timer_tv)
     }
@@ -420,7 +532,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         if (key == KEY_STATUS) {
-            if (sharedPreferences!!.getBoolean(KEY_STATUS, false)) {
+            if (preferences.keyStatus) {
                 startTrackingService(checkPermission = true, initialPermission = false)
             } else {
                 stopTrackingService()
@@ -460,7 +572,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                 ALARM_MANAGER_INTERVAL.toLong(), ALARM_MANAGER_INTERVAL.toLong(), alarmIntent
             )
         } else {
-            sharedPreferences.edit().putBoolean(KEY_STATUS, false).apply()
+            preferences.keyStatus = false
 //            val preference = findPreference<TwoStatePreference>(MainFragment.KEY_STATUS)
 //            preference?.isChecked = false
         }

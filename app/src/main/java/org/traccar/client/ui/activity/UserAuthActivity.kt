@@ -20,6 +20,7 @@ import org.traccar.client.databinding.ActivityUserAuthBinding
 import org.traccar.client.ui.activity.dashboard.DashboardActivity
 import org.traccar.client.ui.viewmodel.AuthViewModel
 import org.traccar.client.ui.viewmodel.ViewModelFactory
+import org.traccar.client.utils.AppPreferencesManager
 import org.traccar.client.utils.PreferenceKey
 import org.traccar.client.utils.networkutils.Status
 
@@ -31,14 +32,16 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
     private var deviceId: String = ""
 
     private lateinit var preferences: SharedPreferences
+    private lateinit var pref : AppPreferencesManager
 
     @SuppressLint("HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityUserAuthBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        pref = AppPreferencesManager(this)
         preferences = this.getSharedPreferences(PreferenceKey.MAIN_PREFERENCE,Context.MODE_PRIVATE)
-        val isLogin = preferences.getBoolean(PreferenceKey.IS_LOGIN,false)
+        val isLogin = pref.isLogin
         if (isLogin) {
             navigateToDashboard()
         } else {
@@ -64,9 +67,6 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
 
             }
             binding.loginBtn.setOnClickListener(this)
-            //tm = getSystemService(TELEPHONY_SERVICE) as TelephonyManager
-
-            Toast.makeText(this, deviceId, Toast.LENGTH_SHORT).show()
         }
 
     }
@@ -111,11 +111,8 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
                                         Status.LOADING -> {
                                         }
                                         Status.SUCCESS -> {
-                                            with(preferences.edit()){
-                                                putString(PreferenceKey.TOKEN,resources.data?.token)
-                                                putBoolean(PreferenceKey.IS_LOGIN,true)
-                                                commit()
-                                            }
+                                            pref.isLogin = true
+                                            pref.token = resources.data?.token
                                             navigateToDashboard()
                                         }
                                     }

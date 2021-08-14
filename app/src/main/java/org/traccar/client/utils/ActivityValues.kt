@@ -19,4 +19,8 @@ object ActivityValues {
     const val PRAY = "pray"
     const val BREAK_DOWN = "break-down"
     const val SHIFT_CHANGE = "shift-change"
+
+    //others
+    const val START = "start"
+    const val STOP = "stop"
 }

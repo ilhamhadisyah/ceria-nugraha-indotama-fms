@@ -111,6 +111,7 @@
                     android:orientation="horizontal">
 
                     <Button
+                        android:id="@+id/rain_btn"
                         android:layout_width="0dp"
                         android:layout_height="50dp"
                         android:layout_margin="5dp"
@@ -123,6 +124,7 @@
                         android:textSize="14sp" />
 
                     <Button
+                        android:id="@+id/slippery_btn"
                         android:layout_width="0dp"
                         android:layout_height="50dp"
                         android:layout_margin="5dp"
@@ -135,6 +137,7 @@
                         android:textSize="14sp" />
 
                     <Button
+                        android:id="@+id/rest_btn"
                         android:layout_width="0dp"
                         android:layout_height="50dp"
                         android:layout_margin="5dp"
@@ -154,6 +157,7 @@
                     android:orientation="horizontal">
 
                     <Button
+                        android:id="@+id/eat_btn"
                         android:layout_width="0dp"
                         android:layout_height="50dp"
                         android:layout_margin="5dp"
@@ -166,6 +170,7 @@
                         android:textSize="14sp" />
 
                     <Button
+                        android:id="@+id/pray_btn"
                         android:layout_width="0dp"
                         android:layout_height="50dp"
                         android:layout_margin="5dp"
@@ -178,6 +183,7 @@
                         android:textSize="14sp" />
 
                     <Button
+                        android:id="@+id/no_operator_btn"
                         android:layout_width="0dp"
                         android:layout_height="50dp"
                         android:layout_margin="5dp"
@@ -198,6 +204,7 @@
                     android:orientation="horizontal">
 
                     <Button
+                        android:id="@+id/breakdown_btn"
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_margin="5dp"
