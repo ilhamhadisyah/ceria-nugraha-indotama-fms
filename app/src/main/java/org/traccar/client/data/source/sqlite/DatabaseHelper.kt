@@ -206,6 +206,38 @@ class DatabaseHelper(context: Context?) :
         }.execute()
     }
 
+    private fun getActivityLog(): ArrayList<ActivityModel>? {
+        val listData: ArrayList<ActivityModel> = arrayListOf()
+        db.rawQuery("SELECT * FROM activities", null)
+            .use { cursor ->
+                while (cursor.moveToNext()) {
+                    listData.add(
+                        ActivityModel(
+                            loadingMaterial = cursor.getString(cursor.getColumnIndex("loading_material")),
+                            activityType = cursor.getString(cursor.getColumnIndex("activity_type")),
+                            imei = cursor.getString(cursor.getColumnIndex("imei")),
+                            action = cursor.getString(cursor.getColumnIndex("action")),
+                            createdAt = cursor.getString(cursor.getColumnIndex("created_at")),
+                            sessionParentNumber = cursor.getInt(cursor.getColumnIndex("session_parent_number")),
+                            sessionChildNumber = cursor.getInt(cursor.getColumnIndex("session_child_number")),
+                            lat = cursor.getDouble(cursor.getColumnIndex("lat")),
+                            long = cursor.getDouble(cursor.getColumnIndex("long")),
+                            status = cursor.getInt(cursor.getColumnIndex("status")),
+                            activityId = cursor.getInt(cursor.getColumnIndex("id"))
+                        )
+                    )
+                }
+            }
+        return listData
+    }
+    fun getActivityLogAsync(handler: DatabaseHandler<ArrayList<ActivityModel>?>) {
+        object : DatabaseAsyncTask<ArrayList<ActivityModel>?>(handler) {
+            override fun executeMethod(): ArrayList<ActivityModel>? {
+                return getActivityLog()
+            }
+        }.execute()
+    }
+
 
     private fun updateActivity(activity: ActivityModel) {
         val values = ContentValues()

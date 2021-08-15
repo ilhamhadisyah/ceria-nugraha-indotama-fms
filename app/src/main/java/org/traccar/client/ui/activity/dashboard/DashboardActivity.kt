@@ -15,7 +15,6 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -32,10 +31,7 @@ import org.traccar.client.databinding.ActivityDashboardBinding
 import org.traccar.client.services.AutostartReceiver
 import org.traccar.client.services.TimerService
 import org.traccar.client.services.TrackingService
-import org.traccar.client.ui.activity.MainActivity
-import org.traccar.client.ui.activity.MainApplication
-import org.traccar.client.ui.activity.ShortcutActivity
-import org.traccar.client.ui.activity.StatusActivity
+import org.traccar.client.ui.activity.*
 import org.traccar.client.ui.viewmodel.DashboardViewModel
 import org.traccar.client.ui.viewmodel.ViewModelFactory
 import org.traccar.client.utils.ActivityValues
@@ -44,7 +40,6 @@ import org.traccar.client.utils.networkutils.Status
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
@@ -74,14 +69,17 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         preferences = AppPreferencesManager(this)
         timer = TimerService(this, this)
+
         initView()
+
         alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmIntent =
             PendingIntent.getBroadcast(this, 0, Intent(this, AutostartReceiver::class.java), 0)
         preferences.keyStatus = true
-        startTrackingService(checkPermission = true, initialPermission = false)
+        startTrackingService(checkPermission = true, initialPermission = true)
     }
 
     override fun onClick(v: View?) {
@@ -91,96 +89,165 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             R.id.start_to_loading_point -> startToLoading()
             R.id.arrive_to_loading_point -> arriveToLoading()
             R.id.rain_btn -> {
-                if (!binding.rainBtn.isSelected) {
-                    viewModel.rain = preferences.getChildSession()
-                    binding.rainBtn.isSelected = true
-                    activityMenu(activityValues.RAIN, activityValues.START, viewModel.rain)
-                } else {
-                    binding.rainBtn.isSelected = false
-                    activityMenu(activityValues.RAIN, activityValues.STOP, viewModel.rain)
-                }
+                alertDialog = AlertDialog.Builder(this)
+                alertDialog
+                    .setTitle("Konfirmasi aktivitas?")
+                    .setMessage("Tidak dapat kembali setelah service berjalan")
+                    .setPositiveButton("Konfirmasi") { _, _ ->
+                        if (!binding.rainBtn.isSelected) {
+                            viewModel.rain = preferences.getChildSession()
+                            binding.rainBtn.isSelected = true
+                            activityMenu(activityValues.RAIN, activityValues.START, viewModel.rain)
+                        } else {
+                            binding.rainBtn.isSelected = false
+                            activityMenu(activityValues.RAIN, activityValues.STOP, viewModel.rain)
+                        }
+                    }
+                    .setNegativeButton("batal") { dialog, _ ->
+                        dialog.cancel()
+                    }.show()
             }
             R.id.slippery_btn -> {
-                if (!binding.slipperyBtn.isSelected) {
-                    viewModel.slippery = preferences.getChildSession()
-                    binding.slipperyBtn.isSelected = true
-                    activityMenu(activityValues.SLIPPERY, activityValues.START, viewModel.slippery)
+                alertDialog = AlertDialog.Builder(this)
+                alertDialog
+                    .setTitle("Konfirmasi aktivitas?")
+                    .setMessage("Tidak dapat kembali setelah service berjalan")
+                    .setPositiveButton("Konfirmasi") { _, _ ->
+                        if (!binding.slipperyBtn.isSelected) {
+                            viewModel.slippery = preferences.getChildSession()
+                            binding.slipperyBtn.isSelected = true
+                            activityMenu(activityValues.SLIPPERY, activityValues.START, viewModel.slippery)
 
-                } else {
-                    binding.slipperyBtn.isSelected = false
-                    activityMenu(activityValues.SLIPPERY, activityValues.STOP, viewModel.slippery)
-                }
+                        } else {
+                            binding.slipperyBtn.isSelected = false
+                            activityMenu(activityValues.SLIPPERY, activityValues.STOP, viewModel.slippery)
+                        }
+                    }
+                    .setNegativeButton("batal") { dialog, _ ->
+                        dialog.cancel()
+                    }.show()
+
             }
             R.id.rest_btn -> {
-                if (!binding.restBtn.isSelected) {
-                    viewModel.rest = preferences.getChildSession()
-                    binding.restBtn.isSelected = true
-                    activityMenu(activityValues.REST, activityValues.START, viewModel.rest)
+                alertDialog = AlertDialog.Builder(this)
+                alertDialog
+                    .setTitle("Konfirmasi aktivitas?")
+                    .setMessage("Tidak dapat kembali setelah service berjalan")
+                    .setPositiveButton("Konfirmasi") { _, _ ->
+                        if (!binding.restBtn.isSelected) {
+                            viewModel.rest = preferences.getChildSession()
+                            binding.restBtn.isSelected = true
+                            activityMenu(activityValues.REST, activityValues.START, viewModel.rest)
 
-                } else {
-                    binding.restBtn.isSelected = false
-                    activityMenu(activityValues.REST, activityValues.STOP, viewModel.rest)
-                }
+                        } else {
+                            binding.restBtn.isSelected = false
+                            activityMenu(activityValues.REST, activityValues.STOP, viewModel.rest)
+                        }
+                    }
+                    .setNegativeButton("batal") { dialog, _ ->
+                        dialog.cancel()
+                    }.show()
+
             }
             R.id.eat_btn -> {
-                if (!binding.eatBtn.isSelected) {
-                    viewModel.eat = preferences.getChildSession()
-                    binding.eatBtn.isSelected = true
-                    activityMenu(activityValues.EAT, activityValues.START, viewModel.eat)
+                alertDialog = AlertDialog.Builder(this)
+                alertDialog
+                    .setTitle("Konfirmasi aktivitas?")
+                    .setMessage("Tidak dapat kembali setelah service berjalan")
+                    .setPositiveButton("Konfirmasi") { _, _ ->
+                        if (!binding.eatBtn.isSelected) {
+                            viewModel.eat = preferences.getChildSession()
+                            binding.eatBtn.isSelected = true
+                            activityMenu(activityValues.EAT, activityValues.START, viewModel.eat)
 
-                } else {
-                    binding.eatBtn.isSelected = false
-                    activityMenu(activityValues.EAT, activityValues.STOP, viewModel.eat)
-                }
+                        } else {
+                            binding.eatBtn.isSelected = false
+                            activityMenu(activityValues.EAT, activityValues.STOP, viewModel.eat)
+                        }
+                    }
+                    .setNegativeButton("batal") { dialog, _ ->
+                        dialog.cancel()
+                    }.show()
+
             }
             R.id.pray_btn -> {
-                if (!binding.prayBtn.isSelected) {
-                    viewModel.pray = preferences.getChildSession()
-                    binding.prayBtn.isSelected = true
-                    activityMenu(activityValues.PRAY, activityValues.START, viewModel.pray)
+                alertDialog = AlertDialog.Builder(this)
+                alertDialog
+                    .setTitle("Konfirmasi aktivitas?")
+                    .setMessage("Tidak dapat kembali setelah service berjalan")
+                    .setPositiveButton("Konfirmasi") { _, _ ->
+                        if (!binding.prayBtn.isSelected) {
+                            viewModel.pray = preferences.getChildSession()
+                            binding.prayBtn.isSelected = true
+                            activityMenu(activityValues.PRAY, activityValues.START, viewModel.pray)
 
-                } else {
-                    binding.prayBtn.isSelected = false
-                    activityMenu(activityValues.PRAY, activityValues.STOP, viewModel.pray)
-                }
+                        } else {
+                            binding.prayBtn.isSelected = false
+                            activityMenu(activityValues.PRAY, activityValues.STOP, viewModel.pray)
+                        }
+                    }
+                    .setNegativeButton("batal") { dialog, _ ->
+                        dialog.cancel()
+                    }.show()
+
             }
             R.id.no_operator_btn -> {
-                if (!binding.noOperatorBtn.isSelected) {
-                    viewModel.noOperator = preferences.getChildSession()
-                    binding.noOperatorBtn.isSelected = true
-                    activityMenu(
-                        activityValues.NO_OPERATOR,
-                        activityValues.START,
-                        viewModel.noOperator
-                    )
+                alertDialog = AlertDialog.Builder(this)
+                alertDialog
+                    .setTitle("Konfirmasi aktivitas?")
+                    .setMessage("Tidak dapat kembali setelah service berjalan")
+                    .setPositiveButton("Konfirmasi") { _, _ ->
+                        if (!binding.noOperatorBtn.isSelected) {
+                            viewModel.noOperator = preferences.getChildSession()
+                            binding.noOperatorBtn.isSelected = true
+                            activityMenu(
+                                activityValues.NO_OPERATOR,
+                                activityValues.START,
+                                viewModel.noOperator
+                            )
 
-                } else {
-                    binding.noOperatorBtn.isSelected = false
-                    activityMenu(
-                        activityValues.NO_OPERATOR,
-                        activityValues.STOP,
-                        viewModel.noOperator
-                    )
-                }
+                        } else {
+                            binding.noOperatorBtn.isSelected = false
+                            activityMenu(
+                                activityValues.NO_OPERATOR,
+                                activityValues.STOP,
+                                viewModel.noOperator
+                            )
+                        }
+                    }
+                    .setNegativeButton("batal") { dialog, _ ->
+                        dialog.cancel()
+                    }.show()
+
             }
             R.id.breakdown_btn -> {
-                if (!binding.breakdownBtn.isSelected) {
-                    viewModel.breakDown = preferences.getChildSession()
-                    binding.breakdownBtn.isSelected = true
-                    activityMenu(
-                        activityValues.BREAK_DOWN,
-                        activityValues.START,
-                        viewModel.breakDown
-                    )
+                alertDialog = AlertDialog.Builder(this)
+                alertDialog
+                    .setTitle("Konfirmasi aktivitas?")
+                    .setMessage("Tidak dapat kembali setelah service berjalan")
+                    .setPositiveButton("Konfirmasi") { _, _ ->
+                        if (!binding.breakdownBtn.isSelected) {
+                            viewModel.breakDown = preferences.getChildSession()
+                            binding.breakdownBtn.isSelected = true
+                            activityMenu(
+                                activityValues.BREAK_DOWN,
+                                activityValues.START,
+                                viewModel.breakDown
+                            )
 
-                } else {
-                    binding.breakdownBtn.isSelected = false
-                    activityMenu(
-                        activityValues.BREAK_DOWN,
-                        activityValues.STOP,
-                        viewModel.breakDown
-                    )
-                }
+                        } else {
+                            binding.breakdownBtn.isSelected = false
+                            activityMenu(
+                                activityValues.BREAK_DOWN,
+                                activityValues.STOP,
+                                viewModel.breakDown
+                            )
+                        }
+                    }
+                    .setNegativeButton("batal") { dialog, _ ->
+                        dialog.cancel()
+                    }.show()
+
             }
         }
     }
@@ -191,42 +258,34 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         action: String,
         childSession: Int
     ) {
-        alertDialog = AlertDialog.Builder(this)
-        alertDialog
-            .setTitle("Konfirmasi aktivitas?")
-            .setMessage("Tidak dapat kembali setelah service berjalan")
-            .setPositiveButton("Konfirmasi") { _, _ ->
-                val date = dateFormatter.format(Date())
-                location.lastLocation.addOnSuccessListener(this) { location ->
+        val date = dateFormatter.format(Date())
+        location.lastLocation.addOnSuccessListener(this) { location ->
 
-                    writeActivity(
-                        ActivityModel(
-                            0,
-                            null,
-                            activity,
-                            deviceId,
-                            action,
-                            date,
-                            viewModel.parentSessionNumber,
-                            childSession,
-                            location.latitude,
-                            location.longitude,
-                            0
-                        )
-                    )
-                    if (viewModel.onTheWay){
-                        if (action == "start"){
-                            timer.stop()
-                        }else{
-                            timer.start()
-                        }
-                    }
-                    getUnPostedActivity()
+            writeActivity(
+                ActivityModel(
+                    0,
+                    null,
+                    activity,
+                    deviceId,
+                    action,
+                    date,
+                    viewModel.parentSessionNumber,
+                    childSession,
+                    location.latitude,
+                    location.longitude,
+                    0
+                )
+            )
+            if (viewModel.onTheWay) {
+                if (action == "start") {
+                    timer.stop()
+                } else {
+                    timer.start()
                 }
             }
-            .setNegativeButton("batal") { dialog, _ ->
-                dialog.cancel()
-            }.show()
+            getUnPostedActivity()
+        }
+
     }
 
     @SuppressLint("MissingPermission")
@@ -249,7 +308,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             activityValues.STOP,
                             date,
                             viewModel.parentSessionNumber,
-                            preferences.childSessionNumber,
+                            viewModel.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -280,6 +339,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                     startLoading = GONE,
                     arriveLoading = GONE
                 )
+                binding.activityContainer?.visibility = GONE
             }
             .setNegativeButton("batal") { dialog, _ ->
                 dialog.cancel()
@@ -309,7 +369,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             activityValues.STOP,
                             date,
                             viewModel.parentSessionNumber,
-                            preferences.childSessionNumber,
+                            viewModel.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -324,7 +384,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             activityValues.START,
                             date,
                             viewModel.parentSessionNumber,
-                            preferences.childSessionNumber,
+                            viewModel.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -364,7 +424,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             activityValues.STOP,
                             date,
                             viewModel.parentSessionNumber,
-                            preferences.childSessionNumber,
+                            viewModel.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -379,7 +439,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             activityValues.START,
                             date,
                             viewModel.parentSessionNumber,
-                            preferences.childSessionNumber,
+                            viewModel.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -403,6 +463,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
     @SuppressLint("MissingPermission")
     private fun startToDumping() {
+        viewModel.childSessionNumber = preferences.childSessionNumber
         viewModel.parentSessionNumber = preferences.getParentSession()
         setDateTime(FULL_DATE_FORMAT)
         alertDialog = AlertDialog.Builder(this)
@@ -422,7 +483,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             activityValues.START,
                             date,
                             viewModel.parentSessionNumber,
-                            preferences.childSessionNumber,
+                            viewModel.childSessionNumber,
                             location.latitude,
                             location.longitude,
                             0
@@ -437,6 +498,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                     startLoading = GONE,
                     arriveLoading = GONE
                 )
+                binding.activityContainer?.visibility = VISIBLE
             }
             .setNegativeButton("batal") { dialog, _ ->
                 dialog.cancel()
@@ -512,6 +574,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             prayBtn.setOnClickListener(this@DashboardActivity)
             noOperatorBtn.setOnClickListener(this@DashboardActivity)
             breakdownBtn.setOnClickListener(this@DashboardActivity)
+            activityContainer?.visibility = GONE
         }
     }
 
@@ -528,6 +591,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         return true
     }
 
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.setting -> {
@@ -540,9 +604,27 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                 startActivity(intent)
                 true
             }
-            R.id.shortcut -> {
-                val intent = Intent(this, ShortcutActivity::class.java)
+            R.id.activity_log->{
+                val intent = Intent(this, ActivityLogActivity::class.java)
                 startActivity(intent)
+                true
+            }
+            R.id.logout -> {
+                alertDialog = AlertDialog.Builder(this)
+                alertDialog
+                    .setTitle("Logout")
+                    .setMessage("Logout akan menghentikan tracking, pastikan logout pada saat tidak ada aktivitas")
+                    .setPositiveButton("Logout") { _, _ ->
+                        stopTrackingService()
+                        preferences.isLogin = false
+                        preferences.token = null
+                        val login = Intent(this, UserAuthActivity::class.java)
+                        startActivity(login)
+                        finishAffinity()
+                    }
+                    .setNegativeButton("batal") { dialog, _ ->
+                        dialog.cancel()
+                    }.show()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -609,10 +691,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         databaseHelper.insertActivityAsync(position, object :
             DatabaseHelper.DatabaseHandler<Unit?> {
             override fun onComplete(success: Boolean, result: Unit?) {
-                if (success) {
-                    Toast.makeText(this@DashboardActivity, "write success", Toast.LENGTH_SHORT)
-                        .show()
-                }
+                Log.d("write",result.toString())
             }
         })
     }
@@ -622,13 +701,9 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             DatabaseHelper.DatabaseHandler<Unit?> {
             override fun onComplete(success: Boolean, result: Unit?) {
                 if (success) {
-                    Toast.makeText(this@DashboardActivity, "updated", Toast.LENGTH_SHORT).show()
+                    Log.d("update",result.toString())
                 } else {
-                    Toast.makeText(
-                        this@DashboardActivity,
-                        "update unsuccessful",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Log.e("update",result.toString())
                 }
             }
         })
@@ -644,6 +719,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             }
         })
     }
+
 
     private fun checkDatabaseUpdate(data: ArrayList<ActivityModel>?) {
         val isConnected: Boolean = activeNetwork.isConnectedOrConnecting
@@ -664,7 +740,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             actData.createdAt!!
 
                         ).observe(this, {
-                            it.let { resource ->
+                            it?.let { resource ->
                                 when (resource.status) {
                                     Status.SUCCESS -> {
                                         Log.d("id ${actData.activityId}", resource.data.toString())
@@ -714,8 +790,8 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                 }
             }
         }
-
     }
+
 
     companion object {
         private const val ALARM_MANAGER_INTERVAL = 15000
@@ -724,12 +800,11 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         private const val SHORT_DATE_FORMAT = "EEE, dd MMM yyyy"
         private const val GONE = View.GONE
         private const val VISIBLE = View.VISIBLE
-
-
     }
 
     override fun onTick(time: String) {
         binding.timerTv.text = time
+
     }
 
 }

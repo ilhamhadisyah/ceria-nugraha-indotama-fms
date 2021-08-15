@@ -24,12 +24,14 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".ui.activity.dashboard.DashboardActivity"
-            android:label="">
-
-        </activity>
-        <activity android:name=".ui.activity.SettingActivity"
-            android:label="Settings"/>
+        <activity android:name=".ui.activity.ActivityLogActivity"
+            android:theme="@style/AppTheme.NoActionBar"/>
+        <activity
+            android:name=".ui.activity.dashboard.DashboardActivity"
+            android:label=""></activity>
+        <activity
+            android:name=".ui.activity.SettingActivity"
+            android:label="Settings" />
         <activity
             android:name=".ui.activity.UserAuthActivity"
             android:theme="@style/AppTheme.NoActionBar">
@@ -56,8 +58,9 @@
                 android:resource="@xml/shortcuts" />
         </activity-alias>
 
-        <activity android:name=".ui.activity.StatusActivity"
-            android:label="Status"/>
+        <activity
+            android:name=".ui.activity.StatusActivity"
+            android:label="Status" />
         <activity
             android:name=".ui.activity.ShortcutActivity"
             android:label="@string/menu_shortcuts">

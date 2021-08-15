@@ -13,8 +13,13 @@
         app:showAsAction="never"/>
 
     <item
-        android:id="@+id/shortcut"
-        android:title="shortcut"
+        android:id="@+id/activity_log"
+        android:title="@string/log"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/logout"
+        android:title="@string/log_out"
         app:showAsAction="never"/>
 
 </menu>

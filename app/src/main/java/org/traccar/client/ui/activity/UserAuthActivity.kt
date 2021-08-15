@@ -32,7 +32,7 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var binding: ActivityUserAuthBinding
     private var deviceId: String = ""
 
-    private lateinit var pref : AppPreferencesManager
+    private lateinit var pref: AppPreferencesManager
 
     @SuppressLint("HardwareIds")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,7 +45,8 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
             navigateToDashboard()
         } else {
             viewModel =
-                ViewModelProviders.of(this,
+                ViewModelProviders.of(
+                    this,
                     ViewModelFactory(
                         APIHelper(
                             APIClient.apiService()
@@ -130,6 +131,7 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
     private fun navigateToDashboard() {
         val mainActivity =
             Intent(this, DashboardActivity::class.java)
+        finishAffinity()
         startActivity(mainActivity)
     }
 

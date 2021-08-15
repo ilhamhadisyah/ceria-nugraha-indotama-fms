@@ -2,7 +2,7 @@ package org.traccar.client.utils
 
 import org.traccar.client.data.model.ActivityModel
 
-object EndpointBodyBuilder {
+object StringBuilder {
 
     fun body(data: ActivityModel): String {
         return "{\n" +
@@ -15,6 +15,26 @@ object EndpointBodyBuilder {
                 "\"long\": \"${data.long}\",\n" +
                 "\"created_at\": \"${data.createdAt}\"\n" +
                 "}"
+    }
+
+    fun log(data: ActivityModel): String {
+        return if (data.loadingMaterial.isNullOrEmpty()) {
+            "${data.activityType}, " +
+                    "${data.lat}, " +
+                    "${data.long}, " +
+                    "parent : ${data.sessionParentNumber}, " +
+                    "child : ${data.sessionChildNumber} " +
+                    "status : ${data.status}"
+        } else {
+            "${data.activityType}, " +
+                    "${data.loadingMaterial}, " +
+                    "${data.lat}, " +
+                    "${data.long}, " +
+                    "parent : ${data.sessionParentNumber}, " +
+                    "child : ${data.sessionChildNumber} " +
+                    "status : ${data.status}"
+        }
+
     }
 
     fun bodyWithLoadingMaterial(data: ActivityModel): String {
