@@ -15,12 +15,17 @@
  */
 package org.traccar.client.ui.activity
 
+import android.app.ActionBar
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.ArrayAdapter
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.ViewGroup
 import android.widget.ListView
+import android.widget.RelativeLayout
+import android.widget.TextView
 import org.traccar.client.R
 import java.text.DateFormat
 import java.util.*
@@ -32,7 +37,23 @@ class StatusActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.list)
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, android.R.id.text1, messages)
+        supportActionBar?.setDisplayShowCustomEnabled(true)
+//        val titleView = TextView(applicationContext)
+//        val layoutParam = RelativeLayout.LayoutParams(
+//            ViewGroup.LayoutParams.MATCH_PARENT,
+//            ActionBar.LayoutParams.WRAP_CONTENT
+//        )
+//        titleView.apply {
+//            text = "Status"
+//            this.layoutParams = layoutParam
+//            this.setTextColor(Color.BLACK)
+//        }
+
+//        actionBar?.apply {
+//            displayOptions = ActionBar.DISPLAY_SHOW_CUSTOM
+//            customView = titleView
+//        }
+        adapter =ArrayAdapter(this, android.R.layout.simple_list_item_1, android.R.id.text1, messages)
         val listView = findViewById<ListView>(android.R.id.list)
         listView.adapter = adapter
         adapter?.let { adapters.add(it) }

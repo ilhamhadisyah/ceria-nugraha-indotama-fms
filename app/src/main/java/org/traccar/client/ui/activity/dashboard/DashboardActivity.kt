@@ -13,19 +13,15 @@ import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Build
 import android.os.Bundle
-import android.os.SystemClock
 import android.util.Log
 import android.view.*
-import android.widget.Chronometer
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
-import androidx.preference.Preference
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-import org.traccar.client.MainFragment
 import org.traccar.client.MainFragment.Companion.KEY_STATUS
 import org.traccar.client.R
 import org.traccar.client.data.model.ActivityModel
@@ -34,17 +30,16 @@ import org.traccar.client.data.source.retrofit.APIHelper
 import org.traccar.client.data.source.sqlite.DatabaseHelper
 import org.traccar.client.databinding.ActivityDashboardBinding
 import org.traccar.client.services.AutostartReceiver
+import org.traccar.client.services.TimerService
 import org.traccar.client.services.TrackingService
 import org.traccar.client.ui.activity.MainActivity
 import org.traccar.client.ui.activity.MainApplication
+import org.traccar.client.ui.activity.ShortcutActivity
 import org.traccar.client.ui.activity.StatusActivity
 import org.traccar.client.ui.viewmodel.DashboardViewModel
 import org.traccar.client.ui.viewmodel.ViewModelFactory
 import org.traccar.client.utils.ActivityValues
 import org.traccar.client.utils.AppPreferencesManager
-import org.traccar.client.utils.PreferenceKey
-import org.traccar.client.utils.PreferenceKey.CHILD_SESSION
-import org.traccar.client.utils.PreferenceKey.PARENT_SESSION
 import org.traccar.client.utils.networkutils.Status
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -53,9 +48,8 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 
 class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
-    View.OnClickListener {
+    View.OnClickListener, TimerService.TimeTickListener {
 
-    private lateinit var sharedPreferences: SharedPreferences
     private lateinit var preferences: AppPreferencesManager
 
     private lateinit var binding: ActivityDashboardBinding
@@ -64,12 +58,13 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
     private lateinit var location: FusedLocationProviderClient
     private lateinit var UTC: TimeZone
     private lateinit var dateFormatter: DateFormat
-    private lateinit var timer: Chronometer
+
     private lateinit var viewModel: DashboardViewModel
     private lateinit var alertDialog: AlertDialog.Builder
     private lateinit var databaseHelper: DatabaseHelper
     private lateinit var cm: ConnectivityManager
     private lateinit var activeNetwork: NetworkInfo
+    private lateinit var timer: TimerService
 
     private var deviceId = ""
     private var loadingMaterial = ""
@@ -80,8 +75,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         binding = ActivityDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
         preferences = AppPreferencesManager(this)
-        sharedPreferences =
-            this.getSharedPreferences(PreferenceKey.MAIN_PREFERENCE, Context.MODE_PRIVATE)
+        timer = TimerService(this, this)
         initView()
         alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmIntent =
@@ -100,76 +94,92 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                 if (!binding.rainBtn.isSelected) {
                     viewModel.rain = preferences.getChildSession()
                     binding.rainBtn.isSelected = true
-                    activityMenu(activityValues.RAIN,activityValues.START,viewModel.rain)
+                    activityMenu(activityValues.RAIN, activityValues.START, viewModel.rain)
                 } else {
                     binding.rainBtn.isSelected = false
-                    activityMenu(activityValues.RAIN,activityValues.STOP,viewModel.rain)
+                    activityMenu(activityValues.RAIN, activityValues.STOP, viewModel.rain)
                 }
             }
             R.id.slippery_btn -> {
                 if (!binding.slipperyBtn.isSelected) {
                     viewModel.slippery = preferences.getChildSession()
                     binding.slipperyBtn.isSelected = true
-                    activityMenu(activityValues.SLIPPERY,activityValues.START,viewModel.slippery)
+                    activityMenu(activityValues.SLIPPERY, activityValues.START, viewModel.slippery)
 
                 } else {
                     binding.slipperyBtn.isSelected = false
-                    activityMenu(activityValues.SLIPPERY,activityValues.STOP,viewModel.slippery)
+                    activityMenu(activityValues.SLIPPERY, activityValues.STOP, viewModel.slippery)
                 }
             }
             R.id.rest_btn -> {
                 if (!binding.restBtn.isSelected) {
                     viewModel.rest = preferences.getChildSession()
                     binding.restBtn.isSelected = true
-                    activityMenu(activityValues.REST,activityValues.START,viewModel.rest)
+                    activityMenu(activityValues.REST, activityValues.START, viewModel.rest)
 
                 } else {
                     binding.restBtn.isSelected = false
-                    activityMenu(activityValues.REST,activityValues.STOP,viewModel.rest)
+                    activityMenu(activityValues.REST, activityValues.STOP, viewModel.rest)
                 }
             }
             R.id.eat_btn -> {
                 if (!binding.eatBtn.isSelected) {
                     viewModel.eat = preferences.getChildSession()
                     binding.eatBtn.isSelected = true
-                    activityMenu(activityValues.EAT,activityValues.START,viewModel.eat)
+                    activityMenu(activityValues.EAT, activityValues.START, viewModel.eat)
 
                 } else {
                     binding.eatBtn.isSelected = false
-                    activityMenu(activityValues.EAT,activityValues.STOP,viewModel.eat)
+                    activityMenu(activityValues.EAT, activityValues.STOP, viewModel.eat)
                 }
             }
             R.id.pray_btn -> {
                 if (!binding.prayBtn.isSelected) {
                     viewModel.pray = preferences.getChildSession()
                     binding.prayBtn.isSelected = true
-                    activityMenu(activityValues.PRAY,activityValues.START,viewModel.pray)
+                    activityMenu(activityValues.PRAY, activityValues.START, viewModel.pray)
 
                 } else {
                     binding.prayBtn.isSelected = false
-                    activityMenu(activityValues.PRAY,activityValues.STOP,viewModel.pray)
+                    activityMenu(activityValues.PRAY, activityValues.STOP, viewModel.pray)
                 }
             }
             R.id.no_operator_btn -> {
                 if (!binding.noOperatorBtn.isSelected) {
                     viewModel.noOperator = preferences.getChildSession()
                     binding.noOperatorBtn.isSelected = true
-                    activityMenu(activityValues.NO_OPERATOR,activityValues.START,viewModel.noOperator)
+                    activityMenu(
+                        activityValues.NO_OPERATOR,
+                        activityValues.START,
+                        viewModel.noOperator
+                    )
 
                 } else {
                     binding.noOperatorBtn.isSelected = false
-                    activityMenu(activityValues.NO_OPERATOR,activityValues.STOP,viewModel.noOperator)
+                    activityMenu(
+                        activityValues.NO_OPERATOR,
+                        activityValues.STOP,
+                        viewModel.noOperator
+                    )
                 }
             }
             R.id.breakdown_btn -> {
                 if (!binding.breakdownBtn.isSelected) {
                     viewModel.breakDown = preferences.getChildSession()
                     binding.breakdownBtn.isSelected = true
-                    activityMenu(activityValues.BREAK_DOWN,activityValues.START,viewModel.breakDown)
+                    activityMenu(
+                        activityValues.BREAK_DOWN,
+                        activityValues.START,
+                        viewModel.breakDown
+                    )
 
                 } else {
                     binding.breakdownBtn.isSelected = false
-                    activityMenu(activityValues.BREAK_DOWN,activityValues.STOP,viewModel.breakDown)
+                    activityMenu(
+                        activityValues.BREAK_DOWN,
+                        activityValues.STOP,
+                        viewModel.breakDown
+                    )
                 }
             }
         }
@@ -204,7 +214,13 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             0
                         )
                     )
-
+                    if (viewModel.onTheWay){
+                        if (action == "start"){
+                            timer.stop()
+                        }else{
+                            timer.start()
+                        }
+                    }
                     getUnPostedActivity()
                 }
             }
@@ -221,6 +237,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             .setTitle("Konfirmasi aktivitas?")
             .setMessage("Tidak dapat kembali setelah service berjalan")
             .setPositiveButton("Konfirmasi") { _, _ ->
+                viewModel.onTheWay = false
                 val date = dateFormatter.format(Date())
                 location.lastLocation.addOnSuccessListener(this) { location ->
                     writeActivity(
@@ -254,7 +271,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 //                        )
 //                    )
                     timer.stop()
-                    viewModel.recentTime = timer.base - SystemClock.elapsedRealtime()
+                    timer.reset()
                     getUnPostedActivity()
                 }
                 mainBtnActivityVisibility(
@@ -282,6 +299,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             .setPositiveButton("Pilih") { _, _ ->
                 val date = dateFormatter.format(Date())
                 location.lastLocation.addOnSuccessListener(this) { location ->
+                    viewModel.onTheWay = true
                     writeActivity(
                         ActivityModel(
                             0,
@@ -312,7 +330,6 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             0
                         )
                     )
-                    timer.base = SystemClock.elapsedRealtime() + viewModel.recentTime
                     timer.start()
                     getUnPostedActivity()
                 }
@@ -337,6 +354,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             .setPositiveButton("Konfirmasi") { _, _ ->
                 val date = dateFormatter.format(Date())
                 location.lastLocation.addOnSuccessListener(this) { location ->
+                    viewModel.onTheWay = false
                     writeActivity(
                         ActivityModel(
                             0,
@@ -369,7 +387,6 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                     )
 
                     timer.stop()
-                    viewModel.recentTime = timer.base - SystemClock.elapsedRealtime()
                     getUnPostedActivity()
                 }
                 mainBtnActivityVisibility(
@@ -395,6 +412,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             .setPositiveButton("Konfirmasi") { _, _ ->
                 val date = dateFormatter.format(Date())
                 location.lastLocation.addOnSuccessListener(this) { location ->
+                    viewModel.onTheWay = true
                     writeActivity(
                         ActivityModel(
                             0,
@@ -410,7 +428,6 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                             0
                         )
                     )
-                    timer.base = SystemClock.elapsedRealtime()
                     timer.start()
                     getUnPostedActivity()
                 }
@@ -496,7 +513,6 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             noOperatorBtn.setOnClickListener(this@DashboardActivity)
             breakdownBtn.setOnClickListener(this@DashboardActivity)
         }
-        timer = findViewById(R.id.timer_tv)
     }
 
 
@@ -521,6 +537,11 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             }
             R.id.status -> {
                 val intent = Intent(this, StatusActivity::class.java)
+                startActivity(intent)
+                true
+            }
+            R.id.shortcut -> {
+                val intent = Intent(this, ShortcutActivity::class.java)
                 startActivity(intent)
                 true
             }
@@ -705,6 +726,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         private const val VISIBLE = View.VISIBLE
 
 
+    }
+
+    override fun onTick(time: String) {
+        binding.timerTv.text = time
     }
 
 }

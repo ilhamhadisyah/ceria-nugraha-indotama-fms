@@ -30,7 +30,6 @@ open class MainApplication : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()
-        //AndroidThreeTen.init(this)
         System.setProperty("http.keepAliveDuration", (30 * 60 * 1000).toString())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             registerChannel()

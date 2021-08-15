@@ -9,7 +9,7 @@ import java.lang.Exception
 
 class DashboardViewModel(private val networkRepository: NetworkRepository) : ViewModel() {
 
-    var recentTime: Long = 0L
+    var onTheWay: Boolean = false
 
     var parentSessionNumber: Int = 0
 

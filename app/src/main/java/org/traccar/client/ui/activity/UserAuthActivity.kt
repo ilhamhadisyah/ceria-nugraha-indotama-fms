@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Bundle
@@ -31,7 +32,6 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var binding: ActivityUserAuthBinding
     private var deviceId: String = ""
 
-    private lateinit var preferences: SharedPreferences
     private lateinit var pref : AppPreferencesManager
 
     @SuppressLint("HardwareIds")
@@ -40,7 +40,6 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
         binding = ActivityUserAuthBinding.inflate(layoutInflater)
         setContentView(binding.root)
         pref = AppPreferencesManager(this)
-        preferences = this.getSharedPreferences(PreferenceKey.MAIN_PREFERENCE,Context.MODE_PRIVATE)
         val isLogin = pref.isLogin
         if (isLogin) {
             navigateToDashboard()
@@ -73,7 +72,7 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun makeSnackBar(message: String) {
         val snackBar = Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
-            .setBackgroundTint(resources.getColor(R.color.red))
+            .setBackgroundTint(Color.RED)
             .setTextColor(resources.getColor(R.color.light))
 
         snackBar.show()

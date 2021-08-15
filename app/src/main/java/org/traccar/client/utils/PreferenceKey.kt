@@ -7,4 +7,9 @@ object PreferenceKey {
     const val TOKEN = "token"
     const val PARENT_SESSION = "parent_session"
     const val CHILD_SESSION = "child_session"
+
+    //timer service
+    const val SECONDS = "seconds"
+    const val RUNNING = "running"
+    const val WAS_RUNNING = "was_running"
 }

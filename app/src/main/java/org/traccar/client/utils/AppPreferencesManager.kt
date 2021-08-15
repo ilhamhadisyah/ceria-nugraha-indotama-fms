@@ -6,7 +6,10 @@ import org.traccar.client.MainFragment
 import org.traccar.client.utils.PreferenceKey.CHILD_SESSION
 import org.traccar.client.utils.PreferenceKey.IS_LOGIN
 import org.traccar.client.utils.PreferenceKey.PARENT_SESSION
+import org.traccar.client.utils.PreferenceKey.RUNNING
+import org.traccar.client.utils.PreferenceKey.SECONDS
 import org.traccar.client.utils.PreferenceKey.TOKEN
+import org.traccar.client.utils.PreferenceKey.WAS_RUNNING
 
 class AppPreferencesManager(context: Context) {
     private var preferences: SharedPreferences =
@@ -31,6 +34,20 @@ class AppPreferencesManager(context: Context) {
     var keyStatus
         get() = preferences.getBoolean(MainFragment.KEY_STATUS, false)
         set(value) = preferences.edit().putBoolean(MainFragment.KEY_STATUS, value).apply()
+
+
+    //timer service
+    var seconds
+        get() = preferences.getInt(SECONDS, 0)
+        set(value) = preferences.edit().putInt(SECONDS, value).apply()
+
+    var running
+        get() = preferences.getBoolean(RUNNING, false)
+        set(value) = preferences.edit().putBoolean(RUNNING, value).apply()
+
+    var wasRunning
+        get() = preferences.getBoolean(WAS_RUNNING, false)
+        set(value) = preferences.edit().putBoolean(WAS_RUNNING, value).apply()
 
     fun getParentSession(): Int {
         val recent: Int = parentSessionNumber

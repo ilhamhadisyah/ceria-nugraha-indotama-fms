@@ -28,7 +28,8 @@
             android:label="">
 
         </activity>
-        <activity android:name=".ui.activity.SettingActivity" />
+        <activity android:name=".ui.activity.SettingActivity"
+            android:label="Settings"/>
         <activity
             android:name=".ui.activity.UserAuthActivity"
             android:theme="@style/AppTheme.NoActionBar">
@@ -55,7 +56,8 @@
                 android:resource="@xml/shortcuts" />
         </activity-alias>
 
-        <activity android:name=".ui.activity.StatusActivity" />
+        <activity android:name=".ui.activity.StatusActivity"
+            android:label="Status"/>
         <activity
             android:name=".ui.activity.ShortcutActivity"
             android:label="@string/menu_shortcuts">

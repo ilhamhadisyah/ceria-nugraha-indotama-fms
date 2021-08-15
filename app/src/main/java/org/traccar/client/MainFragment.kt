@@ -184,20 +184,20 @@ class MainFragment : PreferenceFragmentCompat(), OnSharedPreferenceChangeListene
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.main, menu)
-        super.onCreateOptionsMenu(menu, inflater)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == R.id.status) {
-            startActivity(Intent(activity, StatusActivity::class.java))
-            return true
-        } else if(item.itemId == R.id.setting){
-            startActivity(Intent(activity,SettingActivity::class.java))
-        }
-        return super.onOptionsItemSelected(item)
-    }
+//    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+//        inflater.inflate(R.menu.main, menu)
+//        super.onCreateOptionsMenu(menu, inflater)
+//    }
+//
+//    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+//        if (item.itemId == R.id.status) {
+//            startActivity(Intent(activity, StatusActivity::class.java))
+//            return true
+//        } else if(item.itemId == R.id.setting){
+//            startActivity(Intent(activity,SettingActivity::class.java))
+//        }
+//        return super.onOptionsItemSelected(item)
+//    }
 
     private fun initPreferences() {
         PreferenceManager.setDefaultValues(activity, R.xml.preferences, false)
