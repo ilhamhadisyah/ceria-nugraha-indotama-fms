@@ -6,21 +6,24 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import androidx.preference.PreferenceManager
+import com.google.android.gms.location.*
+import org.traccar.client.MainFragment
 import org.traccar.client.MainFragment.Companion.KEY_STATUS
 import org.traccar.client.R
 import org.traccar.client.data.model.ActivityModel
@@ -42,8 +45,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.HashSet
 
-class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener,
-    View.OnClickListener, TimerService.TimeTickListener {
+
+class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerService.TimeTickListener {
 
     private lateinit var preferences: AppPreferencesManager
 
@@ -53,7 +56,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
     private lateinit var location: FusedLocationProviderClient
     private lateinit var UTC: TimeZone
     private lateinit var dateFormatter: DateFormat
-
+    private lateinit var locationRequest: LocationRequest
     private lateinit var viewModel: DashboardViewModel
     private lateinit var alertDialog: AlertDialog.Builder
     private lateinit var databaseHelper: DatabaseHelper
@@ -65,10 +68,28 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
     private var loadingMaterial = ""
     private val activityValues = ActivityValues
 
+    override fun onResume() {
+        super.onResume()
+        timer.start()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        timer.detach()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        locationRequest = LocationRequest.create()
+        locationRequest.apply {
+            interval = 600000
+            fastestInterval = 5000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        }
+
+        location = LocationServices.getFusedLocationProviderClient(this)
 
         preferences = AppPreferencesManager(this)
         timer = TimerService(this, this)
@@ -79,8 +100,11 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         alarmIntent =
             PendingIntent.getBroadcast(this, 0, Intent(this, AutostartReceiver::class.java), 0)
         preferences.keyStatus = true
-        startTrackingService(checkPermission = true, initialPermission = true)
+
+        //startTracking()
+        startTrackingService(checkPermission = true, initialPermission = false)
     }
+
 
     override fun onClick(v: View?) {
         when (v?.id) {
@@ -97,9 +121,15 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                         if (!binding.rainBtn.isSelected) {
                             viewModel.rain = preferences.getChildSession()
                             binding.rainBtn.isSelected = true
+                            preferences.rain = true
+                            timer.stop()
                             activityMenu(activityValues.RAIN, activityValues.START, viewModel.rain)
                         } else {
                             binding.rainBtn.isSelected = false
+                            preferences.rain = false
+                            if (preferences.sessionState == 1 || preferences.sessionState == 3) {
+                                timer.start()
+                            }
                             activityMenu(activityValues.RAIN, activityValues.STOP, viewModel.rain)
                         }
                     }
@@ -116,11 +146,25 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                         if (!binding.slipperyBtn.isSelected) {
                             viewModel.slippery = preferences.getChildSession()
                             binding.slipperyBtn.isSelected = true
-                            activityMenu(activityValues.SLIPPERY, activityValues.START, viewModel.slippery)
+                            timer.stop()
+                            preferences.slippery = true
+                            activityMenu(
+                                activityValues.SLIPPERY,
+                                activityValues.START,
+                                viewModel.slippery
+                            )
 
                         } else {
                             binding.slipperyBtn.isSelected = false
-                            activityMenu(activityValues.SLIPPERY, activityValues.STOP, viewModel.slippery)
+                            preferences.slippery = false
+                            if (preferences.sessionState == 1 || preferences.sessionState == 3) {
+                                timer.start()
+                            }
+                            activityMenu(
+                                activityValues.SLIPPERY,
+                                activityValues.STOP,
+                                viewModel.slippery
+                            )
                         }
                     }
                     .setNegativeButton("batal") { dialog, _ ->
@@ -137,10 +181,16 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                         if (!binding.restBtn.isSelected) {
                             viewModel.rest = preferences.getChildSession()
                             binding.restBtn.isSelected = true
+                            timer.stop()
+                            preferences.rest = true
                             activityMenu(activityValues.REST, activityValues.START, viewModel.rest)
 
                         } else {
                             binding.restBtn.isSelected = false
+                            preferences.rest = false
+                            if (preferences.sessionState == 1 || preferences.sessionState == 3) {
+                                timer.start()
+                            }
                             activityMenu(activityValues.REST, activityValues.STOP, viewModel.rest)
                         }
                     }
@@ -158,10 +208,16 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                         if (!binding.eatBtn.isSelected) {
                             viewModel.eat = preferences.getChildSession()
                             binding.eatBtn.isSelected = true
+                            timer.stop()
+                            preferences.eat = true
                             activityMenu(activityValues.EAT, activityValues.START, viewModel.eat)
 
                         } else {
                             binding.eatBtn.isSelected = false
+                            preferences.eat = false
+                            if (preferences.sessionState == 1 || preferences.sessionState == 3) {
+                                timer.start()
+                            }
                             activityMenu(activityValues.EAT, activityValues.STOP, viewModel.eat)
                         }
                     }
@@ -179,10 +235,16 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                         if (!binding.prayBtn.isSelected) {
                             viewModel.pray = preferences.getChildSession()
                             binding.prayBtn.isSelected = true
+                            timer.stop()
+                            preferences.pray = true
                             activityMenu(activityValues.PRAY, activityValues.START, viewModel.pray)
 
                         } else {
                             binding.prayBtn.isSelected = false
+                            preferences.pray = false
+                            if (preferences.sessionState == 1 || preferences.sessionState == 3) {
+                                timer.start()
+                            }
                             activityMenu(activityValues.PRAY, activityValues.STOP, viewModel.pray)
                         }
                     }
@@ -200,6 +262,8 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                         if (!binding.noOperatorBtn.isSelected) {
                             viewModel.noOperator = preferences.getChildSession()
                             binding.noOperatorBtn.isSelected = true
+                            timer.stop()
+                            preferences.noOperator = true
                             activityMenu(
                                 activityValues.NO_OPERATOR,
                                 activityValues.START,
@@ -208,6 +272,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
                         } else {
                             binding.noOperatorBtn.isSelected = false
+                            preferences.noOperator = false
+                            if (preferences.sessionState == 1 || preferences.sessionState == 3) {
+                                timer.start()
+                            }
                             activityMenu(
                                 activityValues.NO_OPERATOR,
                                 activityValues.STOP,
@@ -229,6 +297,8 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                         if (!binding.breakdownBtn.isSelected) {
                             viewModel.breakDown = preferences.getChildSession()
                             binding.breakdownBtn.isSelected = true
+                            timer.stop()
+                            preferences.breakDown = true
                             activityMenu(
                                 activityValues.BREAK_DOWN,
                                 activityValues.START,
@@ -237,6 +307,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
                         } else {
                             binding.breakdownBtn.isSelected = false
+                            preferences.breakDown = false
+                            if (preferences.sessionState == 1 || preferences.sessionState == 3) {
+                                timer.start()
+                            }
                             activityMenu(
                                 activityValues.BREAK_DOWN,
                                 activityValues.STOP,
@@ -276,13 +350,6 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                     0
                 )
             )
-            if (viewModel.onTheWay) {
-                if (action == "start") {
-                    timer.stop()
-                } else {
-                    timer.start()
-                }
-            }
             getUnPostedActivity()
         }
 
@@ -332,14 +399,15 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                     timer.stop()
                     timer.reset()
                     getUnPostedActivity()
+                    mainBtnActivityVisibility(
+                        startDumping = VISIBLE,
+                        arriveDumping = GONE,
+                        startLoading = GONE,
+                        arriveLoading = GONE
+                    )
+                    //binding.activityContainer?.visibility = GONE
+                    preferences.sessionState = 4
                 }
-                mainBtnActivityVisibility(
-                    startDumping = VISIBLE,
-                    arriveDumping = GONE,
-                    startLoading = GONE,
-                    arriveLoading = GONE
-                )
-                binding.activityContainer?.visibility = GONE
             }
             .setNegativeButton("batal") { dialog, _ ->
                 dialog.cancel()
@@ -392,13 +460,14 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                     )
                     timer.start()
                     getUnPostedActivity()
+                    mainBtnActivityVisibility(
+                        startDumping = GONE,
+                        arriveDumping = GONE,
+                        startLoading = GONE,
+                        arriveLoading = VISIBLE
+                    )
+                    preferences.sessionState = 3
                 }
-                mainBtnActivityVisibility(
-                    startDumping = GONE,
-                    arriveDumping = GONE,
-                    startLoading = GONE,
-                    arriveLoading = VISIBLE
-                )
             }
             .setNegativeButton("batal") { dialog, _ ->
                 dialog.cancel()
@@ -448,13 +517,14 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
 
                     timer.stop()
                     getUnPostedActivity()
+                    mainBtnActivityVisibility(
+                        startDumping = GONE,
+                        arriveDumping = GONE,
+                        startLoading = VISIBLE,
+                        arriveLoading = GONE
+                    )
+                    preferences.sessionState = 2
                 }
-                mainBtnActivityVisibility(
-                    startDumping = GONE,
-                    arriveDumping = GONE,
-                    startLoading = VISIBLE,
-                    arriveLoading = GONE
-                )
             }
             .setNegativeButton("batal") { dialog, _ ->
                 dialog.cancel()
@@ -491,14 +561,16 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                     )
                     timer.start()
                     getUnPostedActivity()
+                    mainBtnActivityVisibility(
+                        startDumping = GONE,
+                        arriveDumping = VISIBLE,
+                        startLoading = GONE,
+                        arriveLoading = GONE
+                    )
+                    //binding.activityContainer?.visibility = VISIBLE
+                    preferences.sessionState = 1
                 }
-                mainBtnActivityVisibility(
-                    startDumping = GONE,
-                    arriveDumping = VISIBLE,
-                    startLoading = GONE,
-                    arriveLoading = GONE
-                )
-                binding.activityContainer?.visibility = VISIBLE
+
             }
             .setNegativeButton("batal") { dialog, _ ->
                 dialog.cancel()
@@ -532,7 +604,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             setDisplayShowCustomEnabled(true)
             setCustomView(R.layout.custom_toolbar)
         }
-        location = LocationServices.getFusedLocationProviderClient(this)
+
 
         val rawToken = preferences.token
         val token = rawToken?.substringAfter('|')
@@ -555,13 +627,74 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         setDateTime(SHORT_DATE_FORMAT)
         val date = dateFormatter.format(Date())
         binding.dateTv.text = date
+        loadMaterial()
 
-        mainBtnActivityVisibility(
-            startDumping = VISIBLE,
-            arriveDumping = GONE,
-            startLoading = GONE,
-            arriveLoading = GONE
-        )
+        if (preferences.eat) {
+            binding.eatBtn.isSelected = true
+        }
+        if (preferences.pray) {
+            binding.prayBtn.isSelected = true
+        }
+        if (preferences.rest) {
+            binding.restBtn.isSelected = true
+        }
+        if (preferences.breakDown) {
+            binding.breakdownBtn.isSelected = true
+        }
+        if (preferences.noOperator) {
+            binding.noOperatorBtn.isSelected = true
+        }
+        if (preferences.rain) {
+            binding.rainBtn.isSelected = true
+        }
+        if (preferences.slippery) {
+            binding.slipperyBtn.isSelected = true
+        }
+
+        when (preferences.sessionState) {
+            1 -> {
+                mainBtnActivityVisibility(
+                    startDumping = GONE,
+                    arriveDumping = VISIBLE,
+                    startLoading = GONE,
+                    arriveLoading = GONE
+                )
+            }
+            2 -> {
+                mainBtnActivityVisibility(
+                    startDumping = GONE,
+                    arriveDumping = GONE,
+                    startLoading = VISIBLE,
+                    arriveLoading = GONE
+                )
+            }
+            3 -> {
+                mainBtnActivityVisibility(
+                    startDumping = GONE,
+                    arriveDumping = GONE,
+                    startLoading = GONE,
+                    arriveLoading = VISIBLE
+                )
+            }
+            4 -> {
+                mainBtnActivityVisibility(
+                    startDumping = VISIBLE,
+                    arriveDumping = GONE,
+                    startLoading = GONE,
+                    arriveLoading = GONE
+                )
+            }
+            else -> {
+                mainBtnActivityVisibility(
+                    startDumping = VISIBLE,
+                    arriveDumping = GONE,
+                    startLoading = GONE,
+                    arriveLoading = GONE
+                )
+            }
+
+        }
+
         binding.apply {
             startToDumpingPoint.setOnClickListener(this@DashboardActivity)
             arriveToDumpingPoint.setOnClickListener(this@DashboardActivity)
@@ -574,7 +707,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             prayBtn.setOnClickListener(this@DashboardActivity)
             noOperatorBtn.setOnClickListener(this@DashboardActivity)
             breakdownBtn.setOnClickListener(this@DashboardActivity)
-            activityContainer?.visibility = GONE
+            //activityContainer?.visibility = GONE
         }
     }
 
@@ -604,7 +737,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                 startActivity(intent)
                 true
             }
-            R.id.activity_log->{
+            R.id.activity_log -> {
                 val intent = Intent(this, ActivityLogActivity::class.java)
                 startActivity(intent)
                 true
@@ -615,7 +748,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                     .setTitle("Logout")
                     .setMessage("Logout akan menghentikan tracking, pastikan logout pada saat tidak ada aktivitas")
                     .setPositiveButton("Logout") { _, _ ->
-                        stopTrackingService()
+                        stopTracking()
                         preferences.isLogin = false
                         preferences.token = null
                         val login = Intent(this, UserAuthActivity::class.java)
@@ -632,18 +765,21 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         }
     }
 
-
-    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
-        if (key == KEY_STATUS) {
-            if (preferences.keyStatus) {
-                startTrackingService(checkPermission = true, initialPermission = false)
-            } else {
-                stopTrackingService()
-            }
-            (this.application as MainApplication).handleRatingFlow(this)
-        }
+    private fun startTracking() {
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(
+            KEY_STATUS, true
+        ).apply()
+        ContextCompat.startForegroundService(this, Intent(this, TrackingService::class.java))
+        Toast.makeText(this, R.string.status_service_create, Toast.LENGTH_SHORT).show()
     }
 
+    private fun stopTracking() {
+        PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(
+            MainFragment.KEY_STATUS, false
+        ).apply()
+        stopService(Intent(this, TrackingService::class.java))
+        Toast.makeText(this, R.string.status_service_destroy, Toast.LENGTH_SHORT).show()
+    }
 
     private fun startTrackingService(checkPermission: Boolean, initialPermission: Boolean) {
         var permission = initialPermission
@@ -669,29 +805,20 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         }
         if (permission) {
             //setPreferencesEnabled(false)
-            ContextCompat.startForegroundService(this, Intent(this, TrackingService::class.java))
-            alarmManager.setInexactRepeating(
-                AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                ALARM_MANAGER_INTERVAL.toLong(), ALARM_MANAGER_INTERVAL.toLong(), alarmIntent
-            )
+            startTracking()
         } else {
             preferences.keyStatus = false
+            stopTracking()
 //            val preference = findPreference<TwoStatePreference>(MainFragment.KEY_STATUS)
 //            preference?.isChecked = false
         }
-    }
-
-    private fun stopTrackingService() {
-        alarmManager.cancel(alarmIntent)
-        this.stopService(Intent(this, TrackingService::class.java))
-        //setPreferencesEnabled(true)
     }
 
     private fun writeActivity(position: ActivityModel) {
         databaseHelper.insertActivityAsync(position, object :
             DatabaseHelper.DatabaseHandler<Unit?> {
             override fun onComplete(success: Boolean, result: Unit?) {
-                Log.d("write",result.toString())
+                Log.d("write", result.toString())
             }
         })
     }
@@ -701,9 +828,9 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
             DatabaseHelper.DatabaseHandler<Unit?> {
             override fun onComplete(success: Boolean, result: Unit?) {
                 if (success) {
-                    Log.d("update",result.toString())
+                    Log.d("update", result.toString())
                 } else {
-                    Log.e("update",result.toString())
+                    Log.e("update", result.toString())
                 }
             }
         })
@@ -724,6 +851,7 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
     private fun checkDatabaseUpdate(data: ArrayList<ActivityModel>?) {
         val isConnected: Boolean = activeNetwork.isConnectedOrConnecting
         if (isConnected) {
+            loadMaterial()
             if (data?.isNotEmpty()!!) {
                 for (n in data.indices) {
                     val actData = data[n]
@@ -745,6 +873,10 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
                                     Status.SUCCESS -> {
                                         Log.d("id ${actData.activityId}", resource.data.toString())
                                         updateActivity(data[n])
+                                        setDateTime(SHORT_DATE_FORMAT)
+                                        val date = dateFormatter.format(Date())
+                                        //loadMaterial("2021-08-17",date)
+                                        // load material goes here
                                     }
                                     Status.ERROR -> {
                                         Log.e(
@@ -792,12 +924,42 @@ class DashboardActivity : AppCompatActivity(), SharedPreferences.OnSharedPrefere
         }
     }
 
+    @SuppressLint("SetTextI18n")
+    private fun loadMaterial() {
+        setDateTime(SIMPLE_DATE_FORMAT)
+        val endDate = dateFormatter.format(Date())
+        val startDate = "2021-08-01"
+        viewModel.getMaterialsData(startDate, endDate).observe(this, androidx.lifecycle.Observer {
+            it.let { resource ->
+                when (resource.status) {
+                    Status.SUCCESS -> {
+                        val data = resource.data?.data
+                        binding.loadOb.text = "Load OB : ${data?.material?.ob.toString()}"
+                        binding.loadLimonit.text =
+                            "Load Limonit : ${data?.material?.limonit.toString()}"
+                        binding.loadSaprolit.text =
+                            "Load Saprolit : ${data?.material?.saprolit.toString()}"
+                    }
+                    Status.ERROR -> {
+                        Log.e(
+                            "load material failed",
+                            resource.message!!
+                        )
+                    }
+                    Status.LOADING -> {
+
+                    }
+                }
+            }
+        })
+    }
+
 
     companion object {
-        private const val ALARM_MANAGER_INTERVAL = 15000
         private const val PERMISSIONS_REQUEST_LOCATION = 2
         private const val FULL_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
         private const val SHORT_DATE_FORMAT = "EEE, dd MMM yyyy"
+        private const val SIMPLE_DATE_FORMAT = "yyyy-MM-dd"
         private const val GONE = View.GONE
         private const val VISIBLE = View.VISIBLE
     }

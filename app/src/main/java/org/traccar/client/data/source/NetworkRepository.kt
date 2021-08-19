@@ -6,6 +6,9 @@ class NetworkRepository(private val apiHelper: APIHelper) {
     suspend fun getUserAuth(email: String, password: String, device: String) =
         apiHelper.getLoginToken(email, password, device)
 
+    suspend fun getMaterialData(startDate: String, endDate: String) =
+        apiHelper.getMaterialData(startDate, endDate)
+
     suspend fun pushActivity(
         //token: String,
         imei: String,

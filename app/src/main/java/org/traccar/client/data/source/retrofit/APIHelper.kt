@@ -6,6 +6,9 @@ class APIHelper(private var apiService: APIService) {
     suspend fun getLoginToken(email: String, password: String, device: String) =
         apiService.getToken(email, password, device)
 
+    suspend fun getMaterialData(startDate: String, endDate: String) =
+        apiService.getMaterials(startDate, endDate)
+
     suspend fun pushActivity(
         //token: String,
         imei: String,

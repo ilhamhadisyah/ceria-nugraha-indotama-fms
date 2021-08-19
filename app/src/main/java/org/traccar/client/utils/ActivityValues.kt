@@ -23,4 +23,6 @@ object ActivityValues {
     //others
     const val START = "start"
     const val STOP = "stop"
+
+    const val SESSION_STATE = "session_state"
 }

@@ -104,5 +104,22 @@ class DashboardViewModel(private val networkRepository: NetworkRepository) : Vie
 
     }
 
+    fun getMaterialsData(startDate: String, endDate: String) = liveData(Dispatchers.IO) {
+        emit(Resources.loading(data = null))
+        try {
+            emit(
+                Resources.success(data = networkRepository.getMaterialData(startDate, endDate))
+            )
+        } catch (e: Exception) {
+            emit(
+                Resources.error(
+                    message = e.message,
+                    data = null
+                )
+            )
+        }
+
+    }
+
 
 }

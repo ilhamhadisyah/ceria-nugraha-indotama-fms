@@ -1,5 +1,6 @@
 package org.traccar.client.data.source.retrofit
 
+import org.traccar.client.data.model.MaterialsModel
 import org.traccar.client.data.model.PushResponse
 import org.traccar.client.data.model.Token
 import retrofit2.http.*
@@ -19,7 +20,7 @@ interface APIService {
     @POST("activities")
     suspend fun sendActivities(
         //@Header("Authorization") token : String,
-        @Field("imei") imei : String,
+        @Field("imei") imei: String,
         @Field("session_parent_number") session_parent_number: Int,
         @Field("session_child_number") session_child_number: Int,
         @Field("activity_type") activity_type: String,
@@ -35,7 +36,7 @@ interface APIService {
     @POST("activities")
     suspend fun sendActivitiesWithoutMaterialType(
         //@Header("Authorization") token : String,
-        @Field("imei") imei : String,
+        @Field("imei") imei: String,
         @Field("session_parent_number") session_parent_number: Int,
         @Field("session_child_number") session_child_number: Int,
         @Field("activity_type") activity_type: String,
@@ -44,4 +45,12 @@ interface APIService {
         @Field("long") long: Double,
         @Field("created_at") created_at: String
     ): PushResponse
+
+    //@Headers("Accept: application/json")
+    @GET("reports/trip?")
+    suspend fun getMaterials(
+        //@Header("Authorization") token : String,
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String
+    ): MaterialsModel
 }
