@@ -54,6 +54,11 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
                     )
                 ).get(AuthViewModel::class.java)
 
+            if (!pref.username.isNullOrEmpty()&&!pref.password.isNullOrEmpty()){
+                binding.usernameEdt.setText(pref.username)
+                binding.passwordEdt.setText(pref.password)
+            }
+
             deviceId = android.provider.Settings.Secure.getString(
                 this.contentResolver,
                 android.provider.Settings.Secure.ANDROID_ID
@@ -113,6 +118,8 @@ class UserAuthActivity : AppCompatActivity(), View.OnClickListener {
                                         Status.SUCCESS -> {
                                             pref.isLogin = true
                                             pref.token = resources.data?.token
+                                            pref.username = email
+                                            pref.password = password
                                             navigateToDashboard()
                                         }
                                     }

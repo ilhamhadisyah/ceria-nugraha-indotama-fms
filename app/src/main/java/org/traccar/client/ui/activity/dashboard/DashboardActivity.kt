@@ -70,7 +70,9 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
 
     override fun onResume() {
         super.onResume()
-        timer.start()
+        if(preferences.running){
+            timer.start()
+        }
     }
 
     override fun onPause() {
@@ -88,7 +90,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             fastestInterval = 5000
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         }
-
         location = LocationServices.getFusedLocationProviderClient(this)
 
         preferences = AppPreferencesManager(this)
@@ -332,6 +333,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         action: String,
         childSession: Int
     ) {
+        setDateTime(FULL_DATE_FORMAT)
         val date = dateFormatter.format(Date())
         location.lastLocation.addOnSuccessListener(this) { location ->
 
@@ -364,6 +366,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             .setMessage("Tidak dapat kembali setelah service berjalan")
             .setPositiveButton("Konfirmasi") { _, _ ->
                 viewModel.onTheWay = false
+                setDateTime(FULL_DATE_FORMAT)
                 val date = dateFormatter.format(Date())
                 location.lastLocation.addOnSuccessListener(this) { location ->
                     writeActivity(
@@ -425,6 +428,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                 loadingMaterial = items[which]
             }
             .setPositiveButton("Pilih") { _, _ ->
+                setDateTime(FULL_DATE_FORMAT)
                 val date = dateFormatter.format(Date())
                 location.lastLocation.addOnSuccessListener(this) { location ->
                     viewModel.onTheWay = true
@@ -481,6 +485,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             .setTitle("Konfirmasi aktivitas?")
             .setMessage("Tidak dapat kembali setelah service berjalan")
             .setPositiveButton("Konfirmasi") { _, _ ->
+                setDateTime(FULL_DATE_FORMAT)
                 val date = dateFormatter.format(Date())
                 location.lastLocation.addOnSuccessListener(this) { location ->
                     viewModel.onTheWay = false
@@ -541,6 +546,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             .setTitle("Konfirmasi aktivitas?")
             .setMessage("Tidak dapat kembali setelah service berjalan")
             .setPositiveButton("Konfirmasi") { _, _ ->
+                setDateTime(FULL_DATE_FORMAT)
                 val date = dateFormatter.format(Date())
                 location.lastLocation.addOnSuccessListener(this) { location ->
                     viewModel.onTheWay = true
@@ -591,7 +597,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         }
     }
 
-    @SuppressLint("HardwareIds")
+    @SuppressLint("HardwareIds", "SetTextI18n")
     private fun initView() {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -707,6 +713,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             prayBtn.setOnClickListener(this@DashboardActivity)
             noOperatorBtn.setOnClickListener(this@DashboardActivity)
             breakdownBtn.setOnClickListener(this@DashboardActivity)
+            username.text = "User : ${preferences.username}"
             //activityContainer?.visibility = GONE
         }
     }

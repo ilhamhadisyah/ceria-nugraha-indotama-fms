@@ -14,18 +14,16 @@ import org.traccar.client.utils.ActivityValues.SLIPPERY
 import org.traccar.client.utils.PreferenceKey.CHILD_SESSION
 import org.traccar.client.utils.PreferenceKey.IS_LOGIN
 import org.traccar.client.utils.PreferenceKey.PARENT_SESSION
+import org.traccar.client.utils.PreferenceKey.PASSWORD
 import org.traccar.client.utils.PreferenceKey.RUNNING
 import org.traccar.client.utils.PreferenceKey.SECONDS
 import org.traccar.client.utils.PreferenceKey.TOKEN
+import org.traccar.client.utils.PreferenceKey.USERNAME
 import org.traccar.client.utils.PreferenceKey.WAS_RUNNING
 
 class AppPreferencesManager(context: Context) {
     private var preferences: SharedPreferences =
         context.getSharedPreferences(PreferenceKey.MAIN_PREFERENCE, Context.MODE_PRIVATE)
-
-    var handlerTwice
-        get() = preferences.getBoolean("twice",false)
-        set(value) = preferences.edit().putBoolean("twice",value).apply()
 
     var isLogin
         get() = preferences.getBoolean(IS_LOGIN, false)
@@ -34,6 +32,14 @@ class AppPreferencesManager(context: Context) {
     var token
         get() = preferences.getString(TOKEN, null)
         set(value) = preferences.edit().putString(TOKEN, value).apply()
+
+    var username
+        get() = preferences.getString(USERNAME, null)
+        set(value) = preferences.edit().putString(USERNAME, value).apply()
+
+    var password
+        get() = preferences.getString(PASSWORD, null)
+        set(value) = preferences.edit().putString(PASSWORD, value).apply()
 
     var parentSessionNumber
         get() = preferences.getInt(PARENT_SESSION, 0)
