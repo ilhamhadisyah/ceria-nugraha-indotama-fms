@@ -421,7 +421,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
 
         alertDialog = AlertDialog.Builder(this)
         alertDialog
-            .setTitle("Pilih muatan barang")
+            .setTitle("Pilih muatan ")
             .setSingleChoiceItems(items, -1) { _, which ->
                 loadingMaterial = items[which]
             }
@@ -690,9 +690,9 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             }
             else -> {
                 mainBtnActivityVisibility(
-                    startDumping = VISIBLE,
+                    startDumping = GONE,
                     arriveDumping = GONE,
-                    startLoading = GONE,
+                    startLoading = VISIBLE,
                     arriveLoading = GONE
                 )
             }
