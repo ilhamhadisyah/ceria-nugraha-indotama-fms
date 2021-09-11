@@ -14,16 +14,12 @@ import android.net.NetworkInfo
 import android.os.*
 import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
 import androidx.preference.PreferenceManager
-import androidx.preference.TwoStatePreference
 import com.google.android.gms.location.*
-import org.traccar.client.MainFragment
-import org.traccar.client.MainFragment.Companion.KEY_STATUS
 import org.traccar.client.R
 import org.traccar.client.data.model.ActivityModel
 import org.traccar.client.data.source.retrofit.APIClient
@@ -38,7 +34,6 @@ import org.traccar.client.ui.viewmodel.DashboardViewModel
 import org.traccar.client.ui.viewmodel.ViewModelFactory
 import org.traccar.client.utils.ActivityValues
 import org.traccar.client.utils.AppPreferencesManager
-import org.traccar.client.utils.TrackingController
 import org.traccar.client.utils.networkutils.Status
 import java.text.DateFormat
 import java.text.SimpleDateFormat
@@ -63,8 +58,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
     private lateinit var cm: ConnectivityManager
     private lateinit var activeNetwork: NetworkInfo
     private lateinit var timer: TimerService
-    private lateinit var trackingController: TrackingController
-
 
     private var deviceId = ""
     private var loadingMaterial = ""
@@ -104,24 +97,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         preferences.keyStatus = true
 
         startTrackingService(checkPermission = true, initialPermission = false)
-
         initView()
-
-
-//
-//        if (ContextCompat.checkSelfPermission(
-//                this,
-//                Manifest.permission.ACCESS_FINE_LOCATION
-//            ) == PackageManager.PERMISSION_GRANTED
-//        ) {
-//            trackingController = TrackingController(this)
-//            trackingController.start()
-//        }
-
-
-        //startTrackingService(checkPermission = true, initialPermission = false)
-//        ContextCompat.startForegroundService(this, Intent(this, TrackingService::class.java))
-//        startTrackingService(checkPermission = true, initialPermission = false)
     }
 
 
@@ -340,7 +316,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                     .setNegativeButton("batal") { dialog, _ ->
                         dialog.cancel()
                     }.show()
-
             }
         }
     }
@@ -372,7 +347,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             )
             getUnPostedActivity()
         }
-
     }
 
     @SuppressLint("MissingPermission")
@@ -402,21 +376,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                             0
                         )
                     )
-//                    writeActivity(
-//                        ActivityModel(
-//                            0,
-//                            null,
-//                            activityValues.LOADING,
-//                            deviceId,
-//                            "start",
-//                            date,
-//                            viewModel.parentSessionNumber,
-//                            1,
-//                            location.latitude,
-//                            location.longitude,
-//                            0
-//                        )
-//                    )
                     timer.stop()
                     timer.reset()
                     getUnPostedActivity()
@@ -426,7 +385,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                         startLoading = GONE,
                         arriveLoading = GONE
                     )
-                    //binding.activityContainer?.visibility = GONE
                     preferences.sessionState = 4
                 }
             }
@@ -591,7 +549,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                         startLoading = GONE,
                         arriveLoading = GONE
                     )
-                    //binding.activityContainer?.visibility = VISIBLE
                     preferences.sessionState = 1
                 }
 
@@ -628,7 +585,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             setDisplayShowCustomEnabled(true)
             setCustomView(R.layout.custom_toolbar)
         }
-
 
         val rawToken = preferences.token
         val token = rawToken?.substringAfter('|')
@@ -732,10 +688,8 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             noOperatorBtn.setOnClickListener(this@DashboardActivity)
             breakdownBtn.setOnClickListener(this@DashboardActivity)
             username.text = "User : ${preferences.username}"
-            //activityContainer?.visibility = GONE
         }
     }
-
 
     private fun setDateTime(format: String) {
         UTC = TimeZone.getTimeZone("GMT")
@@ -748,7 +702,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         inflater.inflate(R.menu.main, menu)
         return true
     }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
@@ -774,8 +727,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                     .setTitle("Logout")
                     .setMessage("Logout akan menghentikan tracking, pastikan logout pada saat tidak ada aktivitas")
                     .setPositiveButton("Logout") { _, _ ->
-                        //stopTracking()
-                        //stopService(Intent(this, TrackingService::class.java))
                         stopTrackingService()
                         preferences.isLogin = false
                         preferences.token = null
@@ -789,7 +740,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                 true
             }
             else -> super.onOptionsItemSelected(item)
-
         }
     }
 
@@ -826,7 +776,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         })
     }
 
-
     private fun checkDatabaseUpdate(data: ArrayList<ActivityModel>?) {
         val isConnected: Boolean = activeNetwork.isConnectedOrConnecting
         if (isConnected) {
@@ -852,9 +801,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                                     Status.SUCCESS -> {
                                         Log.d("id ${actData.activityId}", resource.data.toString())
                                         updateActivity(data[n])
-                                        setDateTime(SHORT_DATE_FORMAT)
-                                        val date = dateFormatter.format(Date())
-                                        //loadMaterial("2021-08-17",date)
+                                        loadMaterial()
                                         // load material goes here
                                     }
                                     Status.ERROR -> {
@@ -884,6 +831,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                                     Status.SUCCESS -> {
                                         Log.d("id ${actData.activityId}", resource.data.toString())
                                         updateActivity(data[n])
+                                        loadMaterial()
 
                                     }
                                     Status.ERROR -> {
@@ -908,7 +856,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         setDateTime(SIMPLE_DATE_FORMAT)
         val endDate = dateFormatter.format(Date())
         val startDate = "2021-08-01"
-        viewModel.getMaterialsData(startDate, endDate).observe(this, androidx.lifecycle.Observer {
+        viewModel.getMaterialsData(startDate, endDate).observe(this, {
             it.let { resource ->
                 when (resource.status) {
                     Status.SUCCESS -> {
@@ -933,7 +881,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         })
     }
 
-
     companion object {
         private const val PERMISSIONS_REQUEST_LOCATION = 2
         private const val FULL_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
@@ -950,7 +897,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         binding.timerTv.text = time
 
     }
-
 
     private fun startTrackingService(checkPermission: Boolean, initialPermission: Boolean) {
         var permission = initialPermission
@@ -1003,10 +949,8 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                     granted = false
                     break
                 }
-
             }
             startTrackingService(false, granted)
         }
     }
-
 }
