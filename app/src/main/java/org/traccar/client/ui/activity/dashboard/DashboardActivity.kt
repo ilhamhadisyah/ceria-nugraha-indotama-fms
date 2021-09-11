@@ -101,8 +101,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         alarmIntent =
             PendingIntent.getBroadcast(this, 0, Intent(this, AutostartReceiver::class.java), 0)
         preferences.keyStatus = true
-
-        //startTracking()
         startTrackingService(checkPermission = true, initialPermission = false)
     }
 
