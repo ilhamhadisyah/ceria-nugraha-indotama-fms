@@ -79,7 +79,7 @@
                     android:layout_margin="5dp"
                     android:background="@drawable/btn_background"
                     android:padding="30dp"
-                    android:text="@string/arrive_to_dumping_point"
+                    android:text="@string/arrive_at_dumping_point"
                     android:textAllCaps="false"
                     android:textColor="@color/light"
                     android:textSize="20sp" />
@@ -103,7 +103,7 @@
                     android:layout_margin="5dp"
                     android:background="@drawable/btn_background"
                     android:padding="20dp"
-                    android:text="@string/arrive_to_loanding_point"
+                    android:text="@string/arrive_at_loanding_point"
                     android:textAllCaps="false"
                     android:textColor="@color/light"
                     android:textSize="20sp" />

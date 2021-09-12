@@ -6,25 +6,20 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.os.*
 import android.util.Log
 import android.view.*
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProviders
 import androidx.preference.PreferenceManager
 import com.google.android.gms.location.*
-import org.traccar.client.MainFragment
-import org.traccar.client.MainFragment.Companion.KEY_STATUS
 import org.traccar.client.R
 import org.traccar.client.data.model.ActivityModel
 import org.traccar.client.data.source.retrofit.APIClient
@@ -49,7 +44,7 @@ import kotlin.collections.HashSet
 class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerService.TimeTickListener {
 
     private lateinit var preferences: AppPreferencesManager
-
+    private lateinit var sharedPreferences: SharedPreferences
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var alarmManager: AlarmManager
     private lateinit var alarmIntent: PendingIntent
@@ -70,7 +65,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
 
     override fun onResume() {
         super.onResume()
-        if(preferences.running){
+        if (preferences.running) {
             timer.start()
         }
     }
@@ -93,15 +88,16 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         location = LocationServices.getFusedLocationProviderClient(this)
 
         preferences = AppPreferencesManager(this)
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
         timer = TimerService(this, this)
-
-        initView()
 
         alarmManager = this.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmIntent =
             PendingIntent.getBroadcast(this, 0, Intent(this, AutostartReceiver::class.java), 0)
         preferences.keyStatus = true
+
         startTrackingService(checkPermission = true, initialPermission = false)
+        initView()
     }
 
 
@@ -320,7 +316,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                     .setNegativeButton("batal") { dialog, _ ->
                         dialog.cancel()
                     }.show()
-
             }
         }
     }
@@ -352,7 +347,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             )
             getUnPostedActivity()
         }
-
     }
 
     @SuppressLint("MissingPermission")
@@ -382,21 +376,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                             0
                         )
                     )
-//                    writeActivity(
-//                        ActivityModel(
-//                            0,
-//                            null,
-//                            activityValues.LOADING,
-//                            deviceId,
-//                            "start",
-//                            date,
-//                            viewModel.parentSessionNumber,
-//                            1,
-//                            location.latitude,
-//                            location.longitude,
-//                            0
-//                        )
-//                    )
                     timer.stop()
                     timer.reset()
                     getUnPostedActivity()
@@ -406,7 +385,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                         startLoading = GONE,
                         arriveLoading = GONE
                     )
-                    //binding.activityContainer?.visibility = GONE
                     preferences.sessionState = 4
                 }
             }
@@ -421,7 +399,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
 
         alertDialog = AlertDialog.Builder(this)
         alertDialog
-            .setTitle("Pilih muatan barang")
+            .setTitle("Pilih muatan ")
             .setSingleChoiceItems(items, -1) { _, which ->
                 loadingMaterial = items[which]
             }
@@ -571,7 +549,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                         startLoading = GONE,
                         arriveLoading = GONE
                     )
-                    //binding.activityContainer?.visibility = VISIBLE
                     preferences.sessionState = 1
                 }
 
@@ -608,7 +585,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             setDisplayShowCustomEnabled(true)
             setCustomView(R.layout.custom_toolbar)
         }
-
 
         val rawToken = preferences.token
         val token = rawToken?.substringAfter('|')
@@ -690,9 +666,9 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             }
             else -> {
                 mainBtnActivityVisibility(
-                    startDumping = VISIBLE,
+                    startDumping = GONE,
                     arriveDumping = GONE,
-                    startLoading = GONE,
+                    startLoading = VISIBLE,
                     arriveLoading = GONE
                 )
             }
@@ -712,10 +688,8 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
             noOperatorBtn.setOnClickListener(this@DashboardActivity)
             breakdownBtn.setOnClickListener(this@DashboardActivity)
             username.text = "User : ${preferences.username}"
-            //activityContainer?.visibility = GONE
         }
     }
-
 
     private fun setDateTime(format: String) {
         UTC = TimeZone.getTimeZone("GMT")
@@ -728,7 +702,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         inflater.inflate(R.menu.main, menu)
         return true
     }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
@@ -746,6 +719,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                 val intent = Intent(this, ActivityLogActivity::class.java)
                 startActivity(intent)
                 true
+
             }
             R.id.logout -> {
                 alertDialog = AlertDialog.Builder(this)
@@ -753,7 +727,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                     .setTitle("Logout")
                     .setMessage("Logout akan menghentikan tracking, pastikan logout pada saat tidak ada aktivitas")
                     .setPositiveButton("Logout") { _, _ ->
-                        stopTracking()
+                        stopTrackingService()
                         preferences.isLogin = false
                         preferences.token = null
                         val login = Intent(this, UserAuthActivity::class.java)
@@ -766,56 +740,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                 true
             }
             else -> super.onOptionsItemSelected(item)
-
-        }
-    }
-
-    private fun startTracking() {
-        PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(
-            KEY_STATUS, true
-        ).apply()
-        ContextCompat.startForegroundService(this, Intent(this, TrackingService::class.java))
-        Toast.makeText(this, R.string.status_service_create, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun stopTracking() {
-        PreferenceManager.getDefaultSharedPreferences(this).edit().putBoolean(
-            MainFragment.KEY_STATUS, false
-        ).apply()
-        stopService(Intent(this, TrackingService::class.java))
-        Toast.makeText(this, R.string.status_service_destroy, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun startTrackingService(checkPermission: Boolean, initialPermission: Boolean) {
-        var permission = initialPermission
-        if (checkPermission) {
-            val requiredPermissions: MutableSet<String> = HashSet()
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requiredPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
-            }
-            permission = requiredPermissions.isEmpty()
-            if (!permission) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(
-                        requiredPermissions.toTypedArray(),
-                        PERMISSIONS_REQUEST_LOCATION
-                    )
-                }
-                return
-            }
-        }
-        if (permission) {
-            //setPreferencesEnabled(false)
-            startTracking()
-        } else {
-            preferences.keyStatus = false
-            stopTracking()
-//            val preference = findPreference<TwoStatePreference>(MainFragment.KEY_STATUS)
-//            preference?.isChecked = false
         }
     }
 
@@ -852,7 +776,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         })
     }
 
-
     private fun checkDatabaseUpdate(data: ArrayList<ActivityModel>?) {
         val isConnected: Boolean = activeNetwork.isConnectedOrConnecting
         if (isConnected) {
@@ -878,9 +801,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                                     Status.SUCCESS -> {
                                         Log.d("id ${actData.activityId}", resource.data.toString())
                                         updateActivity(data[n])
-                                        setDateTime(SHORT_DATE_FORMAT)
-                                        val date = dateFormatter.format(Date())
-                                        //loadMaterial("2021-08-17",date)
+                                        loadMaterial()
                                         // load material goes here
                                     }
                                     Status.ERROR -> {
@@ -910,6 +831,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
                                     Status.SUCCESS -> {
                                         Log.d("id ${actData.activityId}", resource.data.toString())
                                         updateActivity(data[n])
+                                        loadMaterial()
 
                                     }
                                     Status.ERROR -> {
@@ -934,7 +856,7 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         setDateTime(SIMPLE_DATE_FORMAT)
         val endDate = dateFormatter.format(Date())
         val startDate = "2021-08-01"
-        viewModel.getMaterialsData(startDate, endDate).observe(this, androidx.lifecycle.Observer {
+        viewModel.getMaterialsData(startDate, endDate).observe(this, {
             it.let { resource ->
                 when (resource.status) {
                     Status.SUCCESS -> {
@@ -959,7 +881,6 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         })
     }
 
-
     companion object {
         private const val PERMISSIONS_REQUEST_LOCATION = 2
         private const val FULL_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss 'GMT'"
@@ -967,6 +888,9 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
         private const val SIMPLE_DATE_FORMAT = "yyyy-MM-dd"
         private const val GONE = View.GONE
         private const val VISIBLE = View.VISIBLE
+
+        private const val ALARM_MANAGER_INTERVAL = 15000
+        const val KEY_STATUS = "status"
     }
 
     override fun onTick(time: String) {
@@ -974,4 +898,59 @@ class DashboardActivity : AppCompatActivity(), View.OnClickListener, TimerServic
 
     }
 
+    private fun startTrackingService(checkPermission: Boolean, initialPermission: Boolean) {
+        var permission = initialPermission
+        if (checkPermission) {
+            val requiredPermissions: MutableSet<String> = HashSet()
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requiredPermissions.add(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+            permission = requiredPermissions.isEmpty()
+            if (!permission) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    requestPermissions(
+                        requiredPermissions.toTypedArray(),
+                        PERMISSIONS_REQUEST_LOCATION
+                    )
+                }
+                return
+            }
+        }
+        if (permission) {
+            ContextCompat.startForegroundService(this, Intent(this, TrackingService::class.java))
+            alarmManager.setInexactRepeating(
+                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                ALARM_MANAGER_INTERVAL.toLong(), ALARM_MANAGER_INTERVAL.toLong(), alarmIntent
+            )
+        } else {
+            sharedPreferences.edit().putBoolean(KEY_STATUS, false).apply()
+        }
+    }
+
+    private fun stopTrackingService() {
+        alarmManager.cancel(alarmIntent)
+        this.stopService(Intent(this, TrackingService::class.java))
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == PERMISSIONS_REQUEST_LOCATION) {
+            var granted = true
+            for (result in grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    granted = false
+                    break
+                }
+            }
+            startTrackingService(false, granted)
+        }
+    }
 }

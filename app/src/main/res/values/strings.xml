@@ -51,9 +51,9 @@
     <string name="login">Login</string>
     <string name="setting">Setting</string>
     <string name="start_to_dumping_point">Start to \nDUMPING Point</string>
-    <string name="arrive_at_dumping_point">Arrive to \nDUMPING Point</string>
+    <string name="arrive_at_dumping_point">Arrive at \nDUMPING Point</string>
     <string name="start_to_loading_point">Start to \nLOADING Point</string>
-    <string name="arrive_at_loanding_point">Arrive to \nLOADING Point</string>
+    <string name="arrive_at_loanding_point">Arrive at \nLOADING Point</string>
     <string name="initial_time">0:00:00</string>
     <string name="log">Activity Log</string>
     <string name="log_out">Log Out</string>
